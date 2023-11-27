@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
 from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
-from .models import UserHethong,Role
+
 User = get_user_model()
 
 
@@ -52,12 +52,7 @@ class ReviewSPSerializer(serializers.ModelSerializer):
         model = Reviewsanpham
         fields = ( 'idtaikhoan','idloaigiay', 'comment',)
 
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = ( 'idrole', 'tenchucvu', 'quyenhan',)
-
-class UserHeThongSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserHethong
-        fields = ( 'iduser', 'username', 'password', 'tennhanvien', 'gioitinh', 'ngaysinh', 'idrole', 'createday',)
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ( 'id', 'username', 'password', 'tennhanvien', 'tenchucvu','gioitinh', 'ngaysinh', 'is_manager', 'createday',)

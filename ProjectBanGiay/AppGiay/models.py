@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+import datetime
 
 # Create your models here.
 
@@ -71,6 +72,65 @@ class AuthUserUserPermissions(models.Model):
         managed = False
         db_table = 'auth_user_user_permissions'
         unique_together = (('user', 'permission'),)
+
+
+#Account Managerclass
+class UserAccountManager(BaseUserManager):
+    def create_user(self, email, fullName, role, sex, brithday, joined,password = None):
+        if not email:
+            raise ValueError('User must have email address')
+        
+        email = self.normalize_email(email)
+        user = self.model(email = email, tennhanvien = fullName, tenchucvu = role, gioitinh = sex, ngaysinh = brithday, date_joined =joined)
+        
+        user.set_password(password)
+        user.save()
+        
+        return user
+    
+    def create_manager(self, email, fullName, role, sex, brithday, joined,password = None):
+        user = self.create_user(self, email, fullName, role, sex, brithday, joined,password)
+        user.is_manager = True
+        
+        user.save()
+
+        return user
+    def create_superuser(self, email, fullName, role, sex, brithday, joined,password = None):
+        user = self.create_user(self, email, fullName, role, sex, brithday, joined,password)
+        
+        user.is_superuser = True
+        user.is_staff = True
+        user.is_manager = True
+        
+        user.save()
+        
+        return user
+
+class UserAccount(AbstractBaseUser, PermissionsMixin):
+    id = models.AutoField(db_column='IDUser', primary_key=True) # Field name made lowercase.
+    email = models.EmailField( max_length=254, unique= True ) # Field name made lowercase.
+    tennhanvien = models.CharField(db_column='TenNhanVien', max_length=50)  # Field name made lowercase.
+    tenchucvu = models.CharField(db_column='ChucVu', max_length=50)  # Field name made lowercase.
+    gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
+    ngaysinh = models.DateField(db_column='NgaySinh')  # Field name made lowercase.
+    date_joined = models.DateTimeField()
+    is_active = models.BooleanField(default= True)
+    is_manager = models.BooleanField(default=False)
+    
+    objects = UserAccountManager()
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['fullName']
+    
+    def get_full_name(self):
+        return self.tennhanvien
+    
+    def get_short_name(self):
+        return self.tennhanvien 
+    
+    def __str__(self):
+        return self.email
+
 
 #DjangoGroup
 class DjangoAdminLog(models.Model):
@@ -233,47 +293,3 @@ class Reviewsanpham(models.Model):
         db_table = 'reviewsanpham'
 
 
-class Role(models.Model):
-    idrole = models.IntegerField(db_column='IDRole', primary_key=True)  # Field name made lowercase.
-    tenchucvu = models.CharField(db_column='TenChucVu', max_length=100)  # Field name made lowercase.
-    quyenhan = models.SmallIntegerField(db_column='QuyenHan', db_comment='Quyền hạn người dùng : nhân viên=1, quản lí=2')  # Field name made lowercase. 
-
-    class Meta:
-        managed = False
-        db_table = 'role'
-
-
-class UserHethong(models.Model):
-    iduser = models.AutoField(db_column='IDUser', primary_key=True)  # Field name made lowercase.
-    usename = models.CharField(db_column='Usename', max_length=30)  # Field name made lowercase.
-    password = models.CharField(db_column='Password', max_length=30)  # Field name made lowercase.
-    tennhanvien = models.CharField(db_column='TenNhanVien', max_length=50)  # Field name made lowercase.
-    gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
-    ngaysinh = models.DateField(db_column='NgaySinh')  # Field name made lowercase.
-    idrole = models.ForeignKey(Role, models.DO_NOTHING, db_column='IDRole')  # Field name made lowercase.
-    createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'user_hethong'
-
-
-#Account Managerclass
-class UserAccountManager(BaseUserManager):
-    def create_user(self, email, fullName, password = None):
-        if not email:
-            raise ValueError('User must have email address')
-        
-        email = self.normalize_email(email)
-        user = self.model(email = email, fullName = fullName)
-        
-        user.set_password(password)
-        user.save()
-        
-        return user
-    
-    def create_teacher(self, email, fullName, password = None ):
-        user = self.create_user(email, fullName, password)
-        user.is_teacher = True
-        
-        user.save()
