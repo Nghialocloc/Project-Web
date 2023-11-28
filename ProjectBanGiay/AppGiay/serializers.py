@@ -2,10 +2,14 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
 from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
-
 User = get_user_model()
 
 
+
+class UserAccountSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'tennhanvien', 'tenchucvu', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',) 
 
 class DanhMucGiaySerializer (serializers.ModelSerializer):
     class Meta:
