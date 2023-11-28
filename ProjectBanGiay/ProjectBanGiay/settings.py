@@ -133,6 +133,15 @@ SIMPLE_JWT = {
 
 }
 
+# email set up for django
+# USING SMTP PROTOCOL FOR AUTHENICATION
+
+EMAIL_BACKEND  = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = '587'
+EMAIL_HOST_USER = 'tserverside@gmail.com'
+EMAIL_HOST_PASSWORD = 'xx`5aO]-ZuJBqyRh'
+EMAI_USE_TLS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
