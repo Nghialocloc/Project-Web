@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
 from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
-from .models import UserAccount, UserAccountManager, U
+from .models import UserAccount, UserAccountManager
 from .serializers import ChitietDHSerializer,ChitietHDNHSerializer,HDNhapHangSerializer,DonHangSerializer
 from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,TaiKhoanKGSerializer,ReviewSPSerializer
 from .serializers import UserAccountSerializer
@@ -164,20 +164,10 @@ class DanhMucGiayManage(APIView):
     serializer_class = DanhMucGiaySerializer
     serializer_class1 = ChitietGiaySerializer
 
-    def get_list(self, request):
+    def get(self, request):
         giay = Danhmucgiay.objects.order_by('iddanhmuc').all()
         serializer = self.serializer_class(giay, many=True)
-        return Response(serializer.data, safe= False)
-
-    def get_detail(self, request, number):
-        try :
-            view = Danhmucgiay.objects.get(pk=number)
-        except view.DoesNotExits :
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        tonggiay = Chitietgiay.objects.filterby(iddanhmuc = view.iddanhmuc)
-        serializer = self.serializer_class1(tonggiay, many= True)
-        return Response(serializer.data, safe=False)
+        return Response({'List danh muc giay' :serializer.data}, safe= False)
     
     def post(self, request):
         try: 
@@ -219,7 +209,78 @@ class DanhMucGiayManage(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class ChiTietGiayManager(APIView):
-    pass
+class TimKiemGiayManager(APIView):
+    def timkiem_mausac(self, request):
+        pass
+
+    def timkiem_kichco(self, request):
+        pass
+
+    def timkiem_hangsanxuat(self,request):
+        pass
+
+    def timkiem_giatien(self, request):
+        pass
+
+    def timkiem_loaigiay(self, request):
+        pass
+
+    def timkiem_doituong(self, request):
+        pass
 
 
+class MuaBanManager(APIView):
+    def get_detail(self, request, number):
+        chitietgiay_list = []
+        colour_list = []
+        size_list = []
+
+        try :
+            view = Danhmucgiay.objects.get(iddanhmuc = number)
+        except view.DoesNotExits :
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        chitietgiay = Chitietgiay.objects.filterby(iddanhmuc = view.iddanhmuc)
+        chitietgiay_list.append(ChitietGiaySerializer(chitietgiay).data)
+        return Response({ 'Thong tin chi tiet' : chitietgiay_list}, safe=False)
+    
+    def post_giohang(self, request):
+        pass
+    
+    def delete_giohang(self, request):
+        pass
+
+    def add_giay(self, request):
+
+        pass
+
+    def remove_giay(self, request, number):
+        pass
+    
+
+#Class quan li khach hang
+class KhachHangAccountManager(APIView):
+    def post(self, request):
+        pass
+
+    def put(self, request):
+        pass
+
+    def get(self, request):
+        pass
+
+    def delete(self, request):
+        pass
+
+class KhachHangAccountActivities(APIView):
+    def lichsumuahang(self, request):
+        pass
+
+    def post_review(self, request):
+        pass
+
+    def delete_review(self, request):
+        pass
+
+    def add_diemtichluy(self, request):
+        pass

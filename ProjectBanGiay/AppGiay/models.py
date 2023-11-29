@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-import datetime
 
 # Create your models here.
 
@@ -120,7 +119,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     objects = UserAccountManager()
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['fullName']
+    REQUIRED_FIELDS = ['tennhanvien']
     
     def get_full_name(self):
         return self.tennhanvien
