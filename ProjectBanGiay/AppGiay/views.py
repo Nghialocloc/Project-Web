@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
 from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
 from .models import UserAccount, UserAccountManager
@@ -102,6 +103,12 @@ class RetrieveAccountView(APIView):
                 {'error': 'Something went wrong'},
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['data'] = UserAccountSerializer(self.user).data
+        return data
 
 class UpdateAccountView(APIView):
     def put(self, request, number):
@@ -147,7 +154,7 @@ class DeleteAccount(APIView):
             )
         
 
-#Class quan li ban giay
+#Class quan li danh muc giay
 def insert_danhmucgiay(requested_data):
     tendanhmuc = requested_data['tendanhmuc']
     loaigiay = requested_data['loaigiay']
@@ -210,27 +217,30 @@ class DanhMucGiayManage(APIView):
             )
 
 class TimKiemGiayManager(APIView):
-    def timkiem_mausac(self, request):
+    def get(self, request):
         pass
 
-    def timkiem_kichco(self, request):
+    def timkiem_mausac(request):
         pass
 
-    def timkiem_hangsanxuat(self,request):
+    def timkiem_kichco(request):
         pass
 
-    def timkiem_giatien(self, request):
+    def timkiem_hangsanxuat(request):
         pass
 
-    def timkiem_loaigiay(self, request):
+    def timkiem_giatien(request):
         pass
 
-    def timkiem_doituong(self, request):
+    def timkiem_loaigiay(request):
+        pass
+
+    def timkiem_doituong(request):
         pass
 
 
 class MuaBanManager(APIView):
-    def get_detail(self, request, number):
+    def get(self, request, number):
         chitietgiay_list = []
         colour_list = []
         size_list = []
@@ -243,18 +253,23 @@ class MuaBanManager(APIView):
         chitietgiay = Chitietgiay.objects.filterby(iddanhmuc = view.iddanhmuc)
         chitietgiay_list.append(ChitietGiaySerializer(chitietgiay).data)
         return Response({ 'Thong tin chi tiet' : chitietgiay_list}, safe=False)
-    
-    def post_giohang(self, request):
+
+class ManageGioHang(APIView):
+    def post(self, request):
         pass
     
-    def delete_giohang(self, request):
+    #Chinh sua chi tiet don hang
+    def put(self, request):
         pass
 
-    def add_giay(self, request):
+    def delete(self, request):
+        pass
+
+    def add_giay(request):
 
         pass
 
-    def remove_giay(self, request, number):
+    def remove_giay(request):
         pass
     
 
@@ -273,14 +288,19 @@ class KhachHangAccountManager(APIView):
         pass
 
 class KhachHangAccountActivities(APIView):
-    def lichsumuahang(self, request):
+    #Lay lich su mua hang cua khach
+    def get(self, request):
         pass
 
-    def post_review(self, request):
+
+class ReviewManager(APIView):
+    def post(self, request):
         pass
 
-    def delete_review(self, request):
+    def put(self, request):
         pass
 
-    def add_diemtichluy(self, request):
+    def delete(self, request):
         pass
+
+
