@@ -229,9 +229,9 @@ class Donhang(models.Model):
     idkhachhang = models.ForeignKey('Khachhang', models.DO_NOTHING, db_column='IDKhachHang')  # Field name made lowercase.
     sotienthanhtoan = models.IntegerField(db_column='SoTienThanhToan')  # Field name made lowercase.
     createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
-    createby = models.CharField(db_column='CreateBy', max_length=50)  # Field name made lowercase.
     trangthai = models.SmallIntegerField(db_column='TrangThai', db_comment='Trạng thái đon hàng : Checking=0, Confirm=1, Đang giao=2, Đã hoàn thành=3') 
  # Field name made lowercase.
+    confirmby = models.CharField(db_column='ConfirmBy', max_length=50, blank=True, null=True)  # Field name made lowercase.
     dvvanchuyen = models.CharField(db_column='DVVanChuyen', max_length=100, blank=True, null=True)  # Field name made lowercase.
     tennv_vanchuyen = models.CharField(db_column='TenNV_VanChuyen', max_length=50, blank=True, null=True)  # Field name made lowercase.
     sdt = models.CharField(db_column='SDT', max_length=15, blank=True, null=True)  # Field name made lowercase.
@@ -286,6 +286,7 @@ class Reviewsanpham(models.Model):
     idtaikhoan = models.ForeignKey('TaikhoanKhachhang', models.DO_NOTHING, db_column='IDTaiKhoan')  # Field name made lowercase.
     idloaigiay = models.ForeignKey(Chitietgiay, models.DO_NOTHING, db_column='IDLoaiGiay')  # Field name made lowercase.
     comment = models.CharField(db_column='Comment', max_length=300)  # Field name made lowercase.
+    createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
 
     class Meta:
         managed = False
