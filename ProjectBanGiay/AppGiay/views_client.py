@@ -1,7 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
 from pymysql import NULL
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -12,6 +12,8 @@ from .serializers import ChitietDHSerializer,ChitietHDNHSerializer,HDNhapHangSer
 from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,TaiKhoanKGSerializer,ReviewSPSerializer
 from .serializers import UserAccountSerializer
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework as filter
 import traceback
 import random, string
 import datetime
@@ -182,6 +184,18 @@ class ManageGioHang(APIView):
 
 
 #Class tim kiem cho client va server
+class GiayFilter(filter.FilterSet):
+    hangsanxuat = filter.ModelMultipleChoiceFilter(field_name= 'Mau sac', query = Danhmucgiay.hangsanxuat.__get__)
+    loaigiay = filter.ModelMultipleChoiceFilter(field_name= 'Kich thuoc', query = Danhmucgiay.loaigiay.__get__)
+    doituong = filter.ModelMultipleChoiceFilter(field_name= 'Doi tuong', query = Danhmucgiay.doituong.__get__)
+
+
+class GiayViewSet(viewsets.ModelViewSet):
+    queryset = Danhmucgiay.objects.all()
+    serializer_class = DanhMucGiaySerializer
+    filter_class = GiayFilter
+
+
 class TimKiemGiayManager(APIView):
     def get(self, request):
         pass
