@@ -255,7 +255,3 @@ class KhachHangAccountManager(APIView):
         pass
 
 
-#Lay lich su mua hang cua khach cho server and client
-class KhachHangAccountActivities(APIView):
-    def get(self, request):
-        pass

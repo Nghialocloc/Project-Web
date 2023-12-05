@@ -1,7 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
 from pymysql import NULL
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -13,7 +13,8 @@ from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSe
 from .serializers import UserAccountSerializer
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import rest_framework as filter
+from django_filters import rest_framework as filters
+import django_filters
 import traceback
 import random, string
 import datetime
@@ -183,40 +184,26 @@ class ManageGioHang(APIView):
             )
 
 
-#Class tim kiem cho client va server
-class GiayFilter(filter.FilterSet):
-    hangsanxuat = filter.ModelMultipleChoiceFilter(field_name= 'Mau sac', query = Danhmucgiay.hangsanxuat.__get__)
-    loaigiay = filter.ModelMultipleChoiceFilter(field_name= 'Kich thuoc', query = Danhmucgiay.loaigiay.__get__)
-    doituong = filter.ModelMultipleChoiceFilter(field_name= 'Doi tuong', query = Danhmucgiay.doituong.__get__)
+#Cac class tim kiem cho client va server
+class GiayFilter(django_filters.FilterSet):
+    tendanhmuc = django_filters.CharFilter(field_name= 'tendanhmuc', label= 'Search',ookup_expr='iexact')
 
 
-class GiayViewSet(viewsets.ModelViewSet):
+class GiayList(generics.ListAPIView):
     queryset = Danhmucgiay.objects.all()
     serializer_class = DanhMucGiaySerializer
+    filter_backends = [filters.DjangoFilterBackend]
     filter_class = GiayFilter
 
 
-class TimKiemGiayManager(APIView):
-    def get(self, request):
-        pass
+def get_listgiay(request):
+    giay_filter = GiayFilter(request.GET, queryset = Danhmucgiay.objects.all())
+    context = {
+        'form' : giay_filter.form,
+        'giay' : giay_filter.qs
+    }
+    return render(request, '', context)
 
-    def timkiem_mausac(request):
-        pass
-
-    def timkiem_kichco(request):
-        pass
-
-    def timkiem_hangsanxuat(request):
-        pass
-
-    def timkiem_giatien(request):
-        pass
-
-    def timkiem_loaigiay(request):
-        pass
-
-    def timkiem_doituong(request):
-        pass
 
 #Class kiem soat review khach hang
 class ReviewManager(APIView):
@@ -230,17 +217,7 @@ class ReviewManager(APIView):
         pass
 
 
-# class MuaBanManager(APIView):
-#     def get(self, request, number):
-#         chitietgiay_list = []
-#         colour_list = []
-#         size_list = []
-
-#         try :
-#             view = Danhmucgiay.objects.get(iddanhmuc = number)
-#         except view.DoesNotExits :
-#             return Response(status=status.HTTP_404_NOT_FOUND)
-        
-#         chitietgiay = Chitietgiay.objects.filterby(iddanhmuc = view.iddanhmuc)
-#         chitietgiay_list.append(ChitietGiaySerializer(chitietgiay).data)
-#         return Response({ 'Thong tin chi tiet' : chitietgiay_list}, safe=False)
+#Lay lich su mua hang cua khach cho server and client
+class KhachHangAccountActivities(APIView):
+    def get(self, request):
+        pass
