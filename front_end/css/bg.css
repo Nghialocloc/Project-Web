@@ -1,0 +1,19 @@
+@font-face{
+	font-family:'K2D-Bold';
+	src: url(../fonts/K2D-Bold.ttf);
+}
+@font-face{
+	font-family:'Inter-Bold';
+	src: url(../fonts/Inter/static/Inter-Bold.ttf);
+}
+
+.backgroundMike{
+    font-family: 'Inter-Bold';
+    font-size: 180px;
+    font-style: bold;
+    color: rgb(228, 223, 223);
+    text-align: center;
+}
+#login{
+    font-family: 'Inter-Bold';
+}

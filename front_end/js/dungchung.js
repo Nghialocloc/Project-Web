@@ -228,7 +228,10 @@ function signUp(form) {
     var email = form.email.value;
     var username = form.newUser.value;
     var pass = form.newPass.value;
-    var newUser = new User(username, pass, ho, ten, email);
+    var sdt = form.newSdt.value;
+    var diachi = form.newDc.value;
+    var dob = form.newDob.value;
+    var newUser = new User(username, pass, ho, ten, email, sdt, dob, diachi);
 
     // Lấy dữ liệu các khách hàng hiện có
     var listUser = getListUser();
@@ -635,6 +638,7 @@ function addContainTaiKhoan() {
         <span class="close" onclick="showTaiKhoan(false);">&times;</span>
         <div class="taikhoan">
 
+        <div class="backgroundMike">M I K E</div>
             <ul class="tab-group">
                 <li class="tab active"><a href="#login">Đăng nhập</a></li>
                 <li class="tab"><a href="#signup">Đăng kí</a></li>
@@ -709,6 +713,27 @@ function addContainTaiKhoan() {
                             </label>
                             <input name="newPass" type="password" required autocomplete="off" />
                         </div> <!-- /pass -->
+                        <div class="field-wrap">
+                            <label>
+                                Số điện thoại<span class="req">*</span>
+                            </label>
+                            <input name="newSdt" type="integer" required autocomplete="off" />
+                        </div> <!-- /Sđt -->
+
+
+                        <div class="field-wrap">
+                            <label>
+                                Địa chỉ<span class="req">*</span>
+                            </label>
+                            <input name="newDc" type="text" required autocomplete="off" />
+                        </div> <!-- /Địa chỉ -->
+
+                        <div class="field-wrap">
+                            <label for="start">
+                                <span class="req"></span>
+                            </label>
+                            <input name="newDob" type="date" id="start" min="1923-12-05" required autocomplete="off" />
+                        </div> <!-- /DOB -->
 
                         <button type="submit" class="button button-block" />Tạo tài khoản</button>
 
