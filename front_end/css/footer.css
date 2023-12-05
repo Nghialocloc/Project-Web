@@ -1,0 +1,49 @@
+
+/* ============= Footer ============= */
+.footer {
+	position: relative;
+	/* height: 40px; */
+	width: 100%;
+	background: #252525;
+	display: inline-block;
+	padding-top: 10px;
+}
+.left-line{
+	text-align: left;
+	margin-left: 10%;
+	font-size: 18px;
+	float: left;
+}
+.left-line-2{
+	text-align: left;
+	font-size: 18px;
+	margin-left: 10%;
+	float: left;
+}
+.right-line{
+	text-align: right;
+	font-size: 18px;
+	margin-right: 100px;
+}
+
+.copy-right {
+	/* position: absolute; */
+	/* bottom: 0; */
+	width: 100%;
+	text-align: center;
+	line-height: 40px;
+	font-size: 14px;
+	color: #ccc;
+	background-color: #252525;
+}
+
+.copy-right a {
+	color: #ccc;
+	transition: .2s ease;
+}
+
+.copy-right a:hover {
+	color: #fff;
+}
+
+/* ======= End Footer ======== */

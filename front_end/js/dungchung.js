@@ -528,11 +528,9 @@ function addTopNav() {
             </div> <!-- End Social Topnav -->
 
             <ul class="top-nav-quicklink flexContain">
-                <li><a href="index.html"><i class="fa fa-home"></i> Trang chủ</a></li>
-                <li><a href="tintuc.html"><i class="fa fa-newspaper-o"></i> Tin tức</a></li>
+                <li><a href="trangchu.html"><i class="fa fa-home"></i> Trang chủ</a></li>
                 <li><a href="tuyendung.html"><i class="fa fa-handshake-o"></i> Tuyển dụng</a></li>
                 <li><a href="gioithieu.html"><i class="fa fa-info-circle"></i> Giới thiệu</a></li>
-                <li><a href="trungtambaohanh.html"><i class="fa fa-wrench"></i> Bảo hành</a></li>
                 <li><a href="lienhe.html"><i class="fa fa-phone"></i> Liên hệ</a></li>
             </ul> <!-- End Quick link -->
         </section><!-- End Section -->
@@ -544,14 +542,14 @@ function addHeader() {
     document.write(`        
 	<div class="header group">
         <div class="logo">
-            <a href="index.html">
-                <img src="img/logo.jpg" alt="Trang chủ Smartphone Store" title="Trang chủ Smartphone Store">
+            <a href="trangchu.html">
+                <img src="img/logo.png" alt="Trang chủ Mike Shoes Store" title="Trang chủ Mike Shoes Store">
             </a>
         </div> <!-- End Logo -->
 
         <div class="content">
             <div class="search-header" style="position: relative; left: 162px; top: 1px;">
-                <form class="input-search" method="get" action="index.html">
+                <form class="input-search" method="get" action="trangchu.html">
                     <div class="autocomplete">
                         <input id="search-box" name="search" autocomplete="off" type="text" placeholder="Nhập từ khóa tìm kiếm...">
                         <button type="submit">
@@ -606,8 +604,27 @@ function addFooter() {
 
     <!-- ============== Footer ============= -->
     <div class="copy-right">
-        <p><a href="index.html">LDD Phone Store</a> - All rights reserved © 2021 - Designed by
-            <span style="color: #eee; font-weight: bold">group 15th</span></p>
+        <div class="left-line">
+            <p><a href=""><span style="color: #eee; font-weight: bold">Về chúng tôi</a><br>
+            <a href=""><span style="color: #eee; font-weight: bold">Trở thành thành viên</a><br>
+            <a href=""><span style="color: #eee; font-weight: bold">Feedback của khách hàng</a>
+            </p>
+        </div>
+        <div class="left-line-2">
+            <p><a href=""><span style="color: #eee; font-weight: bold">Chính sách</a><br>
+            <a href="">bảo mật</a><br>
+            <a href="">vận chuyển</a><br>
+            <a href="">đổi trả</a><br>
+            <a href="">thanh toán</a>
+            </p>
+        </div>
+        <div class="right-line">
+            <img src="img/Mike_Footer_logo.png" alt="Logo" height="160px">
+        </div>
+        <br>
+        <br>
+        <p><a href="trangchu.html">Mike Shoes Store</a> - All rights reserved © 2023 - Designed by
+            <span style="color: #eee; font-weight: bold">group 4th</span></p>
     </div>`);
 }
 
@@ -701,24 +718,6 @@ function addContainTaiKhoan() {
             </div><!-- tab-content -->
 
         </div> <!-- /taikhoan -->
-    </div>`);
-}
-// Thêm plc (phần giới thiệu trước footer)
-function addPlc() {
-    document.write(`
-    <div class="plc">
-        <section>
-            <ul class="flexContain">
-                <li>Giao hàng hỏa tốc trong 1 giờ</li>
-                <li>Thanh toán linh hoạt: tiền mặt, visa / master, trả góp</li>
-                <li>Trải nghiệm sản phẩm tại nhà</li>
-                <li>Lỗi đổi tại nhà trong 1 ngày</li>
-                <li>Hỗ trợ suốt thời gian sử dụng.
-                    <br>Hotline:
-                    <a href="tel:12345678" style="color: #288ad6;">12345678</a>
-                </li>
-            </ul>
-        </section>
     </div>`);
 }
 
