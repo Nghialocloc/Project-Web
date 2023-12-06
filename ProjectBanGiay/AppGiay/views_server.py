@@ -172,7 +172,7 @@ class DanhMucGiayManage(APIView):
     serializer_class = DanhMucGiaySerializer
     serializer_class1 = ChitietGiaySerializer
 
-    def get(self, request):
+    def get(self):
         giay = Danhmucgiay.objects.order_by('iddanhmuc').all()
         serializer = self.serializer_class(giay, many=True)
         return Response({'List danh muc giay' :serializer.data}, safe= False)
@@ -227,7 +227,7 @@ class DanhMucGiayManage(APIView):
             data= request.data
             iddanhmuc = data['iddanhmuc']
             serializer = self.serializer_class(data=request.data)
-            result = insert_danhmucgiay(serializer.data, iddanhmuc)
+            insert_danhmucgiay(serializer.data, iddanhmuc)
             return Response(
                 {'Update success'}, 
                 status= status.HTTP_202_ACCEPTED
@@ -255,3 +255,115 @@ class KhachHangAccountManager(APIView):
         pass
 
 
+#Class kiem soat order cua khachhang
+class OrderList(APIView):
+    def get(self):
+        donhang = Donhang.objects.order_by('iddonhang').all()
+        serializer = DonHangSerializer(donhang, many=True)
+        return Response({'List don hang cua khach' :serializer.data}, safe= False)
+
+
+def change_status(request_data):
+    confirmby = request_data['iddonhang']
+    dvvanchuyen = request_data['iddonhang']
+    tennv_vanchuyen = request_data['iddonhang']
+    sdt = request_data['iddonhang']
+    socccd = request_data['iddonhang']
+    thoigiannhan = request_data['iddonhang']
+
+
+class ManageOrder(APIView):
+    serializer_class = DonHangSerializer
+    
+    #Tra ve chi tiet thong tin don hang
+    def get(self, request):
+        try:
+            list_giay = []
+            data = request.data
+            iddonhang = data['iddonhang']
+            donhang = Donhang.objects.get(iddonhang=iddonhang)
+            donhang_seria = self.serializer_class(donhang)
+
+            if donhang_seria.is_valid():
+                danhsachgiay = Chitietdonhang.objects.filter(iddonhang = donhang.iddonhang)
+                for group in danhsachgiay.data:
+                    giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
+                    mausac = giay.mausac
+                    kichthuoc = giay.kichco
+
+                    danhmucgiay = Danhmucgiay.objects.get(iddanhmuc = giay.iddanhmuc)
+                    danhmucgiay_seria = DanhMucGiaySerializer(danhmucgiay)
+                        
+                    CTdonhang = Chitietdonhang.objects.get(iddonhang=giay.iddanhmuc, idgiay = group.get('idgiay'))
+                    soluong = CTdonhang.soluong
+
+                    list_giay.append(
+                        {
+                            'Mau giay' : danhmucgiay_seria,
+                            'Thong tin chi tiet' : {mausac,kichthuoc},
+                            'So luong' : soluong
+                        }
+                    )
+                return Response(
+                    {
+                        'Don hang' : donhang_seria,
+                        'Don hang khach hien tai': list_giay
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+            else :
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request, action):
+        try:
+            data = request.data
+            serializer = self.serializer_class(data)
+            if serializer.is_valid():
+                
+                return Response(
+                    {'Update success'}, 
+                    status= status.HTTP_202_ACCEPTED
+                )
+            else :
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )          
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request):
+        try: 
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                iddonhang = request.data['iddonhang']
+                donhang = Donhang.objects.get(iddonhang = iddonhang)
+                donhang.delete()
+                return Response(
+                    {'error': 'Delete successful'}, 
+                    status= status.HTTP_204_NO_CONTENT
+                )
+            else:
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -27,34 +27,46 @@ def id_generator (size = 5, chars=string.ascii_uppercase + string.digits):
 
 #Chinh sua chi tiet don hang
 def add_giay(request_data):
-        iddonhang = request_data['iddonhang']
-        idgiay = request_data['idgiay']
-        soluong = request_data['soluong']
-        dongia = request_data['dongia']
-        if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
-            return Response(
-                {'error': 'Order not exist'}, 
-                status= status.HTTP_404_NOT_FOUND
-            )            
-        CTdonhang = Chitietdonhang(iddonhang=iddonhang, idgiay=idgiay, soluong=soluong, dongia=dongia)
-        CTdonhang.save()
+    iddonhang = request_data['iddonhang']
+    idgiay = request_data['idgiay']
+    giay = Danhmucgiay.objects.get(idgiay=idgiay)
+    money = giay.giatien
+    soluong = request_data['soluong']
+    dongia = soluong * money
+    if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
         return Response(
-            {'Cap nhat': ChitietDHSerializer(CTdonhang).data}, 
-            status= status.HTTP_200_OK
-        )                     
+            {'error': 'Order not exist'}, 
+            status= status.HTTP_404_NOT_FOUND
+        )            
+    CTdonhang = Chitietdonhang(iddonhang=iddonhang, idgiay=idgiay, soluong=soluong, dongia=dongia)
+    CTdonhang.save()
+    
+    return dongia
             
 
 def remove_giay(request_data):
     CTdonhang = Chitietdonhang.objects.get(iddonhang= request_data['iddonhang'],
                                             idgiay= request_data['idgiay'], 
                                             soluong= request_data['soluong'])
+    remove = CTdonhang.dongia
     CTdonhang.delete()
-    return Response(
-        {'error': 'Delete successful'}, 
-        status= status.HTTP_204_NO_CONTENT
-    )
+    return remove
 
-#Class kiem soat gio hang
+def cofirm_donhang(request_data):
+    iddonhang = request_data['iddonhang']
+    if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
+        return Response(
+            {'error': 'Order not exist'}, 
+            status= status.HTTP_404_NOT_FOUND
+        )
+    else:
+        donhang = Donhang.objects.get(iddonhang = iddonhang)
+        donhang.trangthai = 'Confirm'
+        donhang.save()
+        return Response(DonHangSerializer(donhang).data, status=status.HTTP_202_ACCEPTED)
+
+
+#Class kiem soat gio hang cho khach hang
 class ManageGioHang(APIView):
     serializer_class = DonHangSerializer
 
@@ -99,23 +111,23 @@ class ManageGioHang(APIView):
             if donhang_seria.is_valid():
                 danhsachgiay = Chitietdonhang.objects.filter(iddonhang = donhang.iddonhang)
                 for group in danhsachgiay.data:
-                        giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
-                        mausac = giay.mausac
-                        kichthuoc = giay.kichco
+                    giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
+                    mausac = giay.mausac
+                    kichthuoc = giay.kichco
 
-                        danhmucgiay = Danhmucgiay.objects.get(iddanhmuc = giay.iddanhmuc)
-                        danhmucgiay_seria = DanhMucGiaySerializer(danhmucgiay)
+                    danhmucgiay = Danhmucgiay.objects.get(iddanhmuc = giay.iddanhmuc)
+                    danhmucgiay_seria = DanhMucGiaySerializer(danhmucgiay)
                         
-                        CTdonhang = Chitietdonhang.objects.get(iddonhang=giay.iddanhmuc, idgiay = group.get('idgiay'))
-                        soluong = CTdonhang.soluong
+                    CTdonhang = Chitietdonhang.objects.get(iddonhang=giay.iddanhmuc, idgiay = group.get('idgiay'))
+                    soluong = CTdonhang.soluong
 
-                        list_giay.append(
-                            {
-                                'Mau giay' : danhmucgiay_seria,
-                                'Thong tin chi tiet' : {mausac,kichthuoc},
-                                'So luong' : soluong
-                            }
-                        )
+                    list_giay.append(
+                        {
+                            'Mau giay' : danhmucgiay_seria,
+                            'Thong tin chi tiet' : {mausac,kichthuoc},
+                            'So luong' : soluong
+                        }
+                    )
                 return Response(
                     {
                         'Ma don hang' : iddonhang,
@@ -135,15 +147,23 @@ class ManageGioHang(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def put(self, request, condition):
+    def put(self, request, action):
         try:
             data = request.data
             serializer = self.serializer_class(data)
+            iddonhang = data['iddonhang']
+            donhang = Donhang.objects.get(iddonhang = iddonhang)
             if serializer.is_valid():
-                if condition == 0:
-                    add_giay(serializer.data)
-                elif condition == 1:
+                if action == 0:
+                    money = add_giay(serializer.data)
+                    donhang.sotienthanhtoan += money
+                    donhang.save()
+                elif action == 1:
                     remove_giay(serializer.data)
+                    donhang.sotienthanhtoan -= money
+                    donhang.save()
+                elif action == 2:
+                    cofirm_donhang(serializer.data)
                 return Response(
                     {'Update success'}, 
                     status= status.HTTP_202_ACCEPTED
@@ -161,10 +181,13 @@ class ManageGioHang(APIView):
             )
 
     def delete(self, request):
-        try: 
-            serializer = self.serializer_class(data=request.data)
+        try:
+            data=request.data
+            serializer = self.serializer_class(data)
             if serializer.is_valid():
-                iddonhang = request.data['iddonhang']
+                iddonhang = data['iddonhang']
+                list = Chitietdonhang.objects.filter(iddonhang = iddonhang)
+                list.delete()
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.delete()
                 return Response(
