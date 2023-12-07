@@ -106,6 +106,8 @@ class ManageGioHang(APIView):
             data = request.data
             iddonhang = data['iddonhang']
             donhang = Donhang.objects.get(iddonhang=iddonhang)
+            nguoimua = donhang.idkhachhang
+            money = donhang.sotienthanhtoan
             donhang_seria = self.serializer_class(donhang)
 
             if donhang_seria.is_valid():
@@ -130,8 +132,8 @@ class ManageGioHang(APIView):
                     )
                 return Response(
                     {
-                        'Ma don hang' : iddonhang,
-                        'Don hang khach hien tai': list_giay
+                        'Thong tin don hang' : { nguoimua, money},
+                        'Danh sach don hang khach hien tai': list_giay
                     }, 
                     status=status.HTTP_200_OK
                 )
@@ -186,8 +188,10 @@ class ManageGioHang(APIView):
             serializer = self.serializer_class(data)
             if serializer.is_valid():
                 iddonhang = data['iddonhang']
-                list = Chitietdonhang.objects.filter(iddonhang = iddonhang)
-                list.delete()
+                list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
+                for group in list_giay.data:
+                    giay = Chitietgiay.objects.get(iddonhang = group.get('iddonhang'))
+                    giay.delete()
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.delete()
                 return Response(
@@ -230,17 +234,111 @@ def get_listgiay(request):
 
 #Class kiem soat review khach hang
 class ReviewManager(APIView):
+
+    serializer_class = Reviewsanpham
+
     def post(self, request):
-        pass
+        try: 
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                idkhachhang = request.data['idkhachhang']
+                idgiay = request.data['idgiay']
+                comment = request.date['comment']
+                createday = datetime.date.today()
+
+                review = Reviewsanpham(idkhachhang=idkhachhang, idgiay=idgiay,comment=comment, createday=createday)
+                review.save()
+                return Response(ReviewSPSerializer(review).data, status=status.HTTP_201_CREATED)
+            else:
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def put(self, request):
-        pass
+        try: 
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.comment = request.data['comment']
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def delete(self, request):
-        pass
+        try: 
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                idtaikhoan = request.data['idtaikhoan']
+                idgiay = request.date['idgiay']
+                list_review = Reviewsanpham.objects.filter(idtaikhoan = idtaikhoan, idgiay = idgiay)
+                for group in list_review.data:
+                    review = Reviewsanpham.objects.get(idtaikhoan = group.get('idtaikhoan'), idgiay = group.get('idgiay'))
+                    review.delete()
+                return Response(
+                    {'error': 'Delete successful'}, 
+                    status= status.HTTP_204_NO_CONTENT
+                )
+            else:
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 #Lay lich su mua hang cua khach cho server and client
 class KhachHangAccountActivities(APIView):
     def get(self, request):
-        pass
+        try: 
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                list_muaban = []
+
+                idtaikhoan = request.data['idtaikhoan']
+                taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan=idtaikhoan)
+                khachhang = taikhoan.idkhachhang
+                danhsachdon = Donhang.objects.filter(idkhachhang = khachhang)
+                for group in danhsachdon.data:
+                    donhang = Donhang.objects.get(iddonhang = group.get('iddonhang'))
+                    money = donhang.sotienthanhtoan
+                    ngaythuchien = donhang.createday
+                    list_muaban.append(
+                        {
+                            'Thanh toan' : money,
+                            'Ngay thuc hien' : ngaythuchien
+                        }
+                    )
+                return Response({'Lich su mua ban': list_muaban}, status= status.HTTP_204_NO_CONTENT
+                )
+            else:
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

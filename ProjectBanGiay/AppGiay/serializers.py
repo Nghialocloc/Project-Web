@@ -56,7 +56,3 @@ class ReviewSPSerializer(serializers.ModelSerializer):
         model = Reviewsanpham
         fields = ( 'idtaikhoan','idloaigiay', 'comment',)
 
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ( 'id', 'username', 'password', 'tennhanvien', 'tenchucvu','gioitinh', 'ngaysinh', 'is_manager', 'createday',)
