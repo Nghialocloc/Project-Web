@@ -33,7 +33,7 @@ def home(request) :
 
 
 
-def id_generator (size = 5, chars=string.ascii_uppercase + string.digits):
+def id_generator (size = 5, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
@@ -167,21 +167,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 #Class quan li danh muc giay
-def insert_danhmucgiay(requested_data, iddanhmuc):
-    tendanhmuc = requested_data['tendanhmuc']
-    loaigiay = requested_data['loaigiay']
-    hangsanxuat = requested_data['hangsanxuat']
-    giatien = requested_data['giatien']
-    doituong = requested_data['doituong']
-    
-    danhmucgiay = Danhmucgiay(iddanhmuc = iddanhmuc, tendanhmuc = tendanhmuc, loaigiay = loaigiay, hangsanxuat = hangsanxuat, giatien = giatien, doituong = doituong)
-    danhmucgiay.save()
-    
-    return danhmucgiay
-
-class DanhMucGiayManage(APIView):
+class ManageDanhMucGiay(APIView):
     serializer_class = DanhMucGiaySerializer
     serializer_class1 = ChitietGiaySerializer
+
+    permission_classes = (permissions.AllowAny, )
 
     def get(self, request):
         giay = Danhmucgiay.objects.order_by('iddanhmuc').all()
@@ -189,16 +179,24 @@ class DanhMucGiayManage(APIView):
         return JsonResponse({'List danh muc giay' :serializer.data}, safe= False)
     
     def post(self, request):
-        try: 
+        try:
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
                 while True:
-                    danhmuc = id_generator(size=10)
+                    danhmuc = id_generator(size=5)
                     if (Danhmucgiay.objects.filter(iddanhmuc = danhmuc).count() == 0):
                         break
-                insert_danhmucgiay(serializer.data, danhmuc)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                tendanhmuc = serializer.data.get('tendanhmuc')
+                loaigiay = serializer.data.get('loaigiay')
+                hangsanxuat = serializer.data.get('hangsanxuat')
+                giatien = serializer.data.get('giatien')
+                doituong = serializer.data.get('doituong')
+    
+                danhmucgiay = Danhmucgiay(iddanhmuc = danhmuc, tendanhmuc = tendanhmuc, loaigiay = loaigiay, hangsanxuat = hangsanxuat, giatien = giatien, doituong = doituong)
+                danhmucgiay.save()
+                return JsonResponse(serializer.data, safe=False, status=status.HTTP_201_CREATED)
             else:
+                traceback.print_exc()
                 return  Response(
                     {'error': 'Something went wrong'}, 
                     status= status.HTTP_400_BAD_REQUEST
@@ -213,19 +211,21 @@ class DanhMucGiayManage(APIView):
     def delete(self, request):
         try:
             data=request.data
-            serializer = self.serializer_class(data)
-            if serializer.is_valid():
-                giay = Danhmucgiay.objects.get(iddanhmuc=data['iddanhmuc'])
-                giay.delete()
-                return Response(
-                    {'error': 'Delete successful'}, 
-                    status= status.HTTP_204_NO_CONTENT
+            iddanhmuc=data['iddanhmuc']
+            if Danhmucgiay.objects.filter(iddanhmuc=iddanhmuc).count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    ,safe=False 
+                    ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+                giay = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+                giay.delete()
+                return JsonResponse(
+                    {'error': 'Delete successful'}
+                    ,safe=False 
+                    ,status= status.HTTP_204_NO_CONTENT
+                )     
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -242,14 +242,23 @@ class DanhMucGiayManage(APIView):
             hangsanxuat = data['hangsanxuat']
             giatien = data['giatien']
             doituong = data['doituong']
-            danhmuc = Danhmucgiay.objects.filter(iddanhmuc = iddanhmuc).update(iddanhmuc = iddanhmuc, tendanhmuc = tendanhmuc, 
-                                                                               loaigiay = loaigiay, hangsanxuat = hangsanxuat, 
-                                                                               giatien = giatien, doituong = doituong)
-            danhmuc_seria = self.serializer_class(danhmuc)
-            return Response(
-                {'Update success' : danhmuc_seria.data}, 
-                status= status.HTTP_202_ACCEPTED
-            )
+            danhmuc = Danhmucgiay.objects.filter(iddanhmuc = iddanhmuc)
+            if danhmuc.count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    , safe=False 
+                    ,status= status.HTTP_403_FORBIDDEN
+                )
+            else:
+                danhmuc.update(iddanhmuc = iddanhmuc, tendanhmuc = tendanhmuc, 
+                        loaigiay = loaigiay, hangsanxuat = hangsanxuat, 
+                        giatien = giatien, doituong = doituong)
+                danhmuc_seria = self.serializer_class(danhmuc, many= True)
+                return JsonResponse(
+                    {'Update success' : danhmuc_seria.data}
+                    , safe=False 
+                    ,status= status.HTTP_202_ACCEPTED
+                )
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -259,45 +268,50 @@ class DanhMucGiayManage(APIView):
 
 
 #Class kiem soat order cua khachhang
-def changestatus_1(request_data, iddonhang):
-    confirmby = request_data['iddonhang']
-    dvvanchuyen = request_data['iddonhang']
-    tennv_vanchuyen = request_data['iddonhang']
-    sdt = request_data['iddonhang']
-    socccd = request_data['iddonhang']
-    thoigiannhan = datetime.date.today()
-
-    donhang = Donhang.objects.get(iddonhang = iddonhang) 
-    donhang.trangthai = 'Đang giao' 
-    donhang.confirmby = confirmby 
-    donhang.dvvanchuyen = dvvanchuyen,
-    donhang.tennv_vanchuyen = tennv_vanchuyen
-    donhang.sdt = sdt
-    donhang.socccd = socccd, 
-    donhang.thoigiannhan = thoigiannhan
-    donhang.save()
-
-def changestatus_2(request_data, iddonhang):
-    donhang = Donhang.objects.get(iddonhang = iddonhang)
-    donhang.trangthai = 'Hoàn thành'
-    donhang.save()
-
 class ManageOrder(APIView):
     serializer_class = DonHangSerializer
+
+    permission_classes = (permissions.AllowAny, )
     
     #Tra ve chi tiet thong tin don hang
     def get(self, request):
-        donhang = Donhang.objects.order_by('iddonhang').all()
-        serializer = DonHangSerializer(donhang, many=True)
-        return JsonResponse({'List don hang cua khach' :serializer.data}, safe= False)
+        try:
+            donhang = Donhang.objects.order_by('iddonhang').all()
+            serializer = self.serializer_class(donhang, many=True)
+            return JsonResponse({'List don hang cua khach' :serializer.data}, safe= False)
+        except:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
 
-    def put(self, request, action):
+    def put(self, request):
         try:
             data = request.data
+            iddonhang = data['iddonhang']
+            action = data['action']
             if action == 1:
-                changestatus_1(data)
+                confirmby = data['iddonhang']
+                dvvanchuyen = data['iddonhang']
+                tennv_vanchuyen = data['iddonhang']
+                sdt = data['iddonhang']
+                socccd = data['iddonhang']
+                thoigiannhan = datetime.date.today()
+
+                donhang = Donhang.objects.get(iddonhang = iddonhang) 
+                donhang.trangthai = 'Đang giao' 
+                donhang.confirmby = confirmby 
+                donhang.dvvanchuyen = dvvanchuyen,
+                donhang.tennv_vanchuyen = tennv_vanchuyen
+                donhang.sdt = sdt
+                donhang.socccd = socccd, 
+                donhang.thoigiannhan = thoigiannhan
+                donhang.save()
             elif action == 2 :
-                changestatus_2(data)
+                donhang = Donhang.objects.get(iddonhang = iddonhang)
+                donhang.trangthai = 'Hoàn thành'
+                donhang.save()
             else :
                 return  Response(
                     {'error': 'Something went wrong'}, 
@@ -316,20 +330,22 @@ class ManageOrder(APIView):
 
     def delete(self, request):
         try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                iddonhang = request.data['iddonhang']
-                donhang = Donhang.objects.get(iddonhang = iddonhang)
-                donhang.delete()
-                return Response(
-                    {'error': 'Delete successful'}, 
-                    status= status.HTTP_204_NO_CONTENT
+            data=request.data
+            iddonhang = data['iddonhang']
+            if Donhang.objects.filter(iddonhang = iddonhang).count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    ,safe=False 
+                    ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+                donhang = Donhang.objects.get(iddonhang = iddonhang)
+                donhang.delete()
+                return JsonResponse(
+                    {'error': 'Delete successful'}
+                    ,safe=False 
+                    ,status= status.HTTP_204_NO_CONTENT
+                )        
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -339,9 +355,11 @@ class ManageOrder(APIView):
         
 
 #Class quan li tai khoan khach hang
-class KhachHangAccountManager(APIView):
+class ManageKhachHangAccount(APIView):
 
     serializer_class = TaiKhoanKGSerializer
+
+    permission_classes = (permissions.AllowAny, )
 
     def post(self, request):
         try:
@@ -443,3 +461,4 @@ class KhachHangAccountManager(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        

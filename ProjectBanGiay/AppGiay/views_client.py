@@ -70,6 +70,8 @@ def cofirm_donhang(request_data):
 class ManageGioHang(APIView):
     serializer_class = DonHangSerializer
 
+    permission_classes = (permissions.AllowAny, )
+
     # Tao lan dau tien
     def post(self, request):
         try: 
@@ -211,29 +213,8 @@ class ManageGioHang(APIView):
             )
 
 
-#Cac class tim kiem cho client va server
-class GiayFilter(django_filters.FilterSet):
-    tendanhmuc = django_filters.CharFilter(field_name= 'tendanhmuc', label= 'Search',ookup_expr='iexact')
-
-
-class GiayList(generics.ListAPIView):
-    queryset = Danhmucgiay.objects.all()
-    serializer_class = DanhMucGiaySerializer
-    filter_backends = [filters.DjangoFilterBackend]
-    filter_class = GiayFilter
-
-
-def get_listgiay(request):
-    giay_filter = GiayFilter(request.GET, queryset = Danhmucgiay.objects.all())
-    context = {
-        'form' : giay_filter.form,
-        'giay' : giay_filter.qs
-    }
-    return render(request, '', context)
-
-
 #Class kiem soat review khach hang
-class ReviewManager(APIView):
+class ManageReview(APIView):
 
     serializer_class = Reviewsanpham
 
@@ -308,7 +289,7 @@ class ReviewManager(APIView):
 
 
 #Lay lich su mua hang cua khach cho server and client
-class KhachHangAccountActivities(APIView):
+class HistoryActivities(APIView):
     def get(self, request):
         try: 
             serializer = self.serializer_class(data=request.data)
@@ -332,6 +313,102 @@ class KhachHangAccountActivities(APIView):
                 return Response({'Lich su mua ban': list_muaban}, status= status.HTTP_204_NO_CONTENT
                 )
             else:
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+
+class ShowDetailsAccount(APIView):
+    def get(self, request):
+        try:
+            data = request.data
+            idtaikhoan = data['idtaikhoan']
+            taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan = idtaikhoan)
+            taikhoan_seria = TaiKhoanKGSerializer(taikhoan)
+            if taikhoan_seria.is_valid():
+                thongtin = Khachhang.objects.get(idkhachhang = taikhoan.idkhachhang)
+                name = thongtin.tenkhachhang
+                address = thongtin.diachi
+                email = thongtin.email
+                phonenumber = thongtin.sdt
+
+                sex =  taikhoan.gioitinh
+                brithday = taikhoan.ngaysinh
+                diemtichluy = taikhoan.diemtichluy
+                createday = taikhoan.ngaylaptk
+            return JsonResponse(
+                {
+                    'Thong tin khach hang' : {name,address,email,phonenumber},
+                    'Thong tin tai khoan' : {sex,brithday,diemtichluy,createday}
+
+                }, safe= False
+                , status=status.HTTP_200_OK)
+        except:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
+
+
+#Cac class tim kiem cho client va server
+class GiayFilter(django_filters.FilterSet):
+    tendanhmuc = django_filters.CharFilter(field_name= 'tendanhmuc', label= 'Search',ookup_expr='iexact')
+
+
+class GiayList(generics.ListAPIView):
+    queryset = Danhmucgiay.objects.all()
+    serializer_class = DanhMucGiaySerializer
+    filter_backends = [filters.DjangoFilterBackend]
+    filter_class = GiayFilter
+
+
+def get_listgiay(request):
+    giay_filter = GiayFilter(request.GET, queryset = Danhmucgiay.objects.all())
+    context = {
+        'form' : giay_filter.form,
+        'giay' : giay_filter.qs
+    }
+    return render(request, '', context)
+
+class GetDetailsGiay(APIView):
+    def get(self, request):
+        colour_list = []
+        size_list = []
+
+        try:
+            serializer = DanhMucGiaySerializer(data=request.data)
+            if serializer.is_valid():
+                data = request.data
+                iddanhmuc = data['iddanhmuc']
+                list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
+                for group in list_giay.data:
+                    giay = Chitietgiay.objects.get(iddanhmuc = group.get('iddanhmuc'))
+                    #Neu het hang , bo qua mau giay nay
+                    if giay.sotonkho == 0:
+                        continue
+                    else:
+                        colour = giay.mausac
+                        size = giay.kichco
+                        size_list.append(size)
+                        colour_list.append(colour)
+                return JsonResponse(
+                    {
+                        'Thong tin giay' : serializer.data,
+                        'List mau sac co': colour_list,
+                        'List kich thuoc co' : size_list
+                    }, safe= False
+                    , status=status.HTTP_200_OK
+                )
+            else:
+                traceback.print_exc()
                 return  Response(
                     {'error': 'Something went wrong'}, 
                     status= status.HTTP_400_BAD_REQUEST

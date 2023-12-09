@@ -14,7 +14,7 @@ class UserAccountSerializer (serializers.ModelSerializer):
 class DanhMucGiaySerializer (serializers.ModelSerializer):
     class Meta:
         model = Danhmucgiay
-        fields = ('iddanhmuc', 'tendanhmuc', 'loaigiay', 'hangsanxuat','giatien', 'doituong',) 
+        fields = ('iddanhmuc','tendanhmuc', 'loaigiay', 'hangsanxuat','giatien', 'doituong') 
 
 class ChitietGiaySerializer (serializers.ModelSerializer):
     class Meta:
@@ -34,7 +34,7 @@ class ChitietHDNHSerializer (serializers.ModelSerializer):
 class DonHangSerializer (serializers.ModelSerializer):
     class Meta:
         model = Donhang
-        fields = ( 'iddonhang', 'idkhachhang', 'sotienthanhtoan', 'createday', 'createby', 'trangthai', 'dvvanchuyen', 'tennv_vanchuyen', 'sdt', 'socccd', 'thoigiannhan',) 
+        fields = ( 'iddonhang', 'idkhachhang', 'sotienthanhtoan', 'createday', 'confirmby', 'trangthai', 'dvvanchuyen', 'tennv_vanchuyen', 'sdt', 'socccd', 'thoigiannhan',) 
 
 class HDNhapHangSerializer (serializers.ModelSerializer):
     class Meta:
