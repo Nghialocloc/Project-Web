@@ -57,12 +57,12 @@ class ManageAccount(APIView):
             re_password = data['re_password']
             
             # TODO: the logic in the signup
-            is_mangaer = data['is_manager']
+            is_manager = data['is_manager']
             
             if password ==  re_password:
                 if len(password) >= 8:
                     if not User.objects.filter(email=email).exists():
-                        if not is_mangaer:
+                        if not is_manager:
                             UserAccountManager.create_user(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
                             return Response(
                                 {"success": "User successfully created"},
@@ -174,9 +174,9 @@ class ManageDanhMucGiay(APIView):
     permission_classes = (permissions.AllowAny, )
 
     def get(self, request):
-        giay = Danhmucgiay.objects.order_by('iddanhmuc').all()
-        serializer = self.serializer_class(giay, many=True)
-        return JsonResponse({'List danh muc giay' :serializer.data}, safe= False)
+        loaigiay = Danhmucgiay.objects.order_by('iddanhmuc').all()
+        serializer = self.serializer_class(loaigiay, many=True)
+        return JsonResponse({'List danh muc giay' : serializer.data}, safe= False)
     
     def post(self, request):
         try:
@@ -219,12 +219,15 @@ class ManageDanhMucGiay(APIView):
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
-                giay = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
-                giay.delete()
+                list_chitiet = Chitietgiay.objects.filter(iddanhmuc=iddanhmuc)
+                for group in list_chitiet:
+                    group.delete()
+                danhmucgiay = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+                danhmucgiay.delete()
                 return JsonResponse(
-                    {'error': 'Delete successful'}
+                    {'Result': 'Delete successful'}
                     ,safe=False 
-                    ,status= status.HTTP_204_NO_CONTENT
+                    ,status= status.HTTP_202_ACCEPTED
                 )     
         except Exception as e:
             traceback.print_exc()
@@ -251,14 +254,149 @@ class ManageDanhMucGiay(APIView):
                 )
             else:
                 danhmuc.update(iddanhmuc = iddanhmuc, tendanhmuc = tendanhmuc, 
-                        loaigiay = loaigiay, hangsanxuat = hangsanxuat, 
-                        giatien = giatien, doituong = doituong)
+                            loaigiay = loaigiay, hangsanxuat = hangsanxuat, 
+                            giatien = giatien, doituong = doituong)
                 danhmuc_seria = self.serializer_class(danhmuc, many= True)
                 return JsonResponse(
                     {'Update success' : danhmuc_seria.data}
                     , safe=False 
                     ,status= status.HTTP_202_ACCEPTED
                 )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ManageChitietGiay(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self,request):
+        try:
+            serializer = ChitietGiaySerializer(data=request.data)
+            if serializer.is_valid():
+                while True:
+                    idgiay = id_generator(size=6)
+                    if (Chitietgiay.objects.filter(idgiay=idgiay).count() == 0):
+                        break
+                iddanhmuc = serializer.data.get('iddanhmuc')
+                kichco = serializer.data.get('kichco')
+                mausac = serializer.data.get('mausac')
+                sotonkho = serializer.data.get('sotonkho')
+    
+                maugiay = Chitietgiay(idgiay=idgiay, iddanhmuc=iddanhmuc, kichco=kichco, mausac= mausac, sotonkho=sotonkho)
+                maugiay.save()
+                return JsonResponse(serializer.data, safe=False, status=status.HTTP_201_CREATED)
+            else:
+                traceback.print_exc()
+                return  Response(
+                    {'error': 'Something went wrong'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request):
+        try: 
+            data= request.data
+            idgiay = data['idgiay']
+            iddanhmuc = data['iddanhmuc']
+            kichco = data['kichco']
+            mausac = data['mausac']
+            sotonkho = data['sotonkho']
+            maugiay = Chitietgiay.objects.filter(idgiay=idgiay)
+            if maugiay.count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    , safe=False 
+                    ,status= status.HTTP_403_FORBIDDEN
+                )
+            else:
+                maugiay.update(idgiay=idgiay, iddanhmuc = iddanhmuc, kichco=kichco, mausac=mausac, sotonkho=sotonkho)
+                maugiay_seria = ChitietGiaySerializer(maugiay, many= True)
+                return JsonResponse(
+                    {'Update success' : maugiay_seria.data}
+                    , safe=False 
+                    ,status= status.HTTP_202_ACCEPTED
+                )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self,request):
+        try:
+            data=request.data
+            idgiay=data['idgiay']
+            if Chitietgiay.objects.filter(idgiay=idgiay).count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    ,safe=False 
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                giay = Chitietgiay.objects.get(idgiay=idgiay)
+                giay.delete()
+                return JsonResponse(
+                    {'Result': 'Delete successful'}
+                    ,safe=False 
+                    ,status= status.HTTP_202_ACCEPTED
+                )     
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class DetailListDanhmuc(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self,request):
+        list_chitiet = []
+
+        try:
+            data = request.data
+            iddanhmuc = data['iddanhmuc']
+            danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+            serializer = DanhMucGiaySerializer(danhmuc)
+            tendanhmuc = serializer.data.get('tendanhmuc')
+            giatien = serializer.data.get('giatien')
+            list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
+            list_giay_seria = ChitietGiaySerializer(list_giay, many = True)
+            for group in list_giay_seria.data:
+                giay = Chitietgiay.objects.get(iddanhmuc = group.get('iddanhmuc'))
+                #Neu het hang , bo qua mau giay nay
+                colour = giay.mausac
+                size = giay.kichco
+                soluong = giay.sotonkho
+            list_chitiet.append(
+                {
+                    'tendanhmuc' : tendanhmuc,
+                    'gia tien' : giatien,
+                    'kich thuoc' : size,
+                    'mausac' : colour,
+                    'So ton kho' : soluong,
+                }
+            )
+            return JsonResponse(
+                {
+                    'Thong tin thong ke' : list_chitiet
+                }
+                , safe= False
+                , status=status.HTTP_200_OK
+            )          
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -339,6 +477,11 @@ class ManageOrder(APIView):
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
+                list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
+                list_giay_seria = ChitietDHSerializer(list_giay, many = True)
+                for group in list_giay_seria.data:
+                    giay = Chitietdonhang.objects.get(iddonhang = group.get('iddonhang'))
+                    giay.delete()
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.delete()
                 return JsonResponse(
@@ -364,7 +507,6 @@ class ManageKhachHangAccount(APIView):
     def post(self, request):
         try:
             data = request.data
-            
             while True:
                 taikhoan = id_generator(size=10)
                 if (TaikhoanKhachhang.objects.filter(idtaikhoan = taikhoan).count() == 0):
@@ -447,8 +589,8 @@ class ManageKhachHangAccount(APIView):
                 taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan = idtaikhoan)
                 taikhoan.delete()
                 return Response(
-                    {'error': 'Delete successful'}, 
-                    status= status.HTTP_204_NO_CONTENT
+                    {'Result': 'Delete successful'}, 
+                    status= status.HTTP_202_ACCEPTED
                 )
             else:
                 return  Response(
@@ -461,4 +603,3 @@ class ManageKhachHangAccount(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        

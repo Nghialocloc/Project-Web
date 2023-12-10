@@ -203,6 +203,7 @@ class Chitietgiay(models.Model):
 
 
 class Chitietdonhang(models.Model):
+    idchitiet = models.AutoField(db_column='IDChitiet', primary_key=True)  # Field name made lowercase.
     iddonhang = models.ForeignKey('Donhang', models.DO_NOTHING, db_column='IDDonHang')  # Field name made lowercase.
     idgiay = models.ForeignKey('Chitietgiay', models.DO_NOTHING, db_column='IDGiay')  # Field name made lowercase.
     soluong = models.SmallIntegerField(db_column='SoLuong')  # Field name made lowercase.
@@ -214,6 +215,7 @@ class Chitietdonhang(models.Model):
 
 
 class ChitiethoadonNhapHang(models.Model):
+    idchitiet = models.AutoField(db_column='IDChitiet', primary_key=True)  # Field name made lowercase.
     idhoadon = models.ForeignKey('HoadonNhapHang', models.DO_NOTHING, db_column='IDHoaDon')  # Field name made lowercase.
     idgiay = models.ForeignKey(Chitietgiay, models.DO_NOTHING, db_column='IDGiay')  # Field name made lowercase.
     soluong = models.SmallIntegerField(db_column='SoLuong')  # Field name made lowercase.
@@ -283,8 +285,9 @@ class TaikhoanKhachhang(models.Model):
 
 
 class Reviewsanpham(models.Model):
+    idreview = models.AutoField(db_column='IDReview', primary_key=True)  # Field name made lowercase.
     idtaikhoan = models.ForeignKey('TaikhoanKhachhang', models.DO_NOTHING, db_column='IDTaiKhoan')  # Field name made lowercase.
-    idloaigiay = models.ForeignKey(Chitietgiay, models.DO_NOTHING, db_column='IDLoaiGiay')  # Field name made lowercase.
+    idloaigiay = models.ForeignKey('Danhmucgiay', models.DO_NOTHING, db_column='IDLoaiGiay')  # Field name made lowercase.
     comment = models.CharField(db_column='Comment', max_length=300)  # Field name made lowercase.
     createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
 

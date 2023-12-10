@@ -49,10 +49,10 @@ class KhachhangSerializer(serializers.ModelSerializer):
 class TaiKhoanKGSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaikhoanKhachhang
-        fields = ( 'idtaikhoan','idkhachhang', 'username', 'password', 'gioitinh', 'ngaysinh', 'diemtichluy', 'ngaylaptk',)
+        fields = ( 'idtaikhoan','idkhachhang', 'username', 'password', 'gioitinh', 'ngaysinh', 'diemtichluy', 'ngaylaptk')
 
 class ReviewSPSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reviewsanpham
-        fields = ( 'idtaikhoan','idloaigiay', 'comment',)
+        fields = ( 'idreview','idtaikhoan','idloaigiay', 'comment', 'createday')
 
