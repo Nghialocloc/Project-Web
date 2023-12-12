@@ -1,4 +1,4 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import HttpResponse
 from django.http import JsonResponse
 from pymysql import NULL
 from rest_framework import generics, permissions, status
@@ -12,14 +12,14 @@ from .serializers import ChitietDHSerializer,ChitietHDNHSerializer,HDNhapHangSer
 from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,TaiKhoanKGSerializer,ReviewSPSerializer
 from .serializers import UserAccountSerializer
 from django.contrib.auth import get_user_model
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import rest_framework as filters
-import django_filters
 import traceback
 import random, string
 import datetime
 
 User = get_user_model()
+
+def is_valid_param(param) :
+    return param != '' and param is not None
 
 def id_generator (size = 5, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -27,6 +27,10 @@ def id_generator (size = 5, chars=string.digits):
 
 #Chinh sua chi tiet don hang
 def add_giay(request_data):
+    while True:
+        idchitiet = id_generator(size=10)
+        if (Chitietdonhang.objects.filter(idchitiet = idchitiet).count() == 0):
+            break
     iddonhang = request_data['iddonhang']
     idgiay = request_data['idgiay']
     giay = Danhmucgiay.objects.get(idgiay=idgiay)
@@ -38,16 +42,15 @@ def add_giay(request_data):
             {'error': 'Order not exist'}, 
             status= status.HTTP_404_NOT_FOUND
         )            
-    CTdonhang = Chitietdonhang(iddonhang=iddonhang, idgiay=idgiay, soluong=soluong, dongia=dongia)
+    CTdonhang = Chitietdonhang(idchitiet= idchitiet, iddonhang=Donhang(iddonhang=iddonhang), idgiay=Chitietgiay(idgiay=idgiay), 
+                               soluong=soluong, dongia=dongia)
     CTdonhang.save()
     
     return dongia
             
 
 def remove_giay(request_data):
-    CTdonhang = Chitietdonhang.objects.get(iddonhang= request_data['iddonhang'],
-                                            idgiay= request_data['idgiay'], 
-                                            soluong= request_data['soluong'])
+    CTdonhang = Chitietdonhang.objects.get(idchitiet= request_data['idchitiet'])
     remove = CTdonhang.dongia
     CTdonhang.delete()
     return remove
@@ -94,11 +97,8 @@ class ManageGioHang(APIView):
     def post(self, request):
         try: 
             data = request.data
-            idtaikhoan = data['idtaikhoan']
-            if idtaikhoan != 10000:
-                idkhachhang = 10000
-            else:
-                idkhachhang = TaikhoanKhachhang.objects.get(idtaikhoan=idtaikhoan).idkhachhang
+            idkhachhang = data['idkhachhang']
+            idkhachhang == 10000
             while True:
                 iddonhang = id_generator(size=10)
                 if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
@@ -223,6 +223,62 @@ class ManageGioHang(APIView):
                     {'error': 'Something went wrong'}, 
                     status= status.HTTP_400_BAD_REQUEST
                 )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+#Tra ve thong tin chi tiet ve giay cho khach hang
+class GetDetailsGiay(APIView):
+    serializer_class = ChitietGiaySerializer
+
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self, request):
+        colour_list = []
+        size_list = []
+
+        try:
+            data = request.data
+            iddanhmuc = data['iddanhmuc']
+            list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
+            list_giay_seria = self.serializer_class(list_giay, many = True)
+            for group in list_giay_seria.data:
+                giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
+                #Neu het hang , bo qua mau giay nay
+                if giay.sotonkho == 0:
+                    continue
+                else:
+                    colour = giay.mausac
+                    size = giay.kichco
+                    if not size_list.__contains__(size):
+                        size_list.append(size)
+                    if not colour_list.__contains__(colour):
+                        colour_list.append(colour)
+            danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+            serializer = DanhMucGiaySerializer(danhmuc)
+            tendanhmuc = serializer.data.get('tendanhmuc')
+            loaigiay = serializer.data.get('loaigiay')
+            hangsanxuat = serializer.data.get('hangsanxuat')
+            giatien = serializer.data.get('giatien')
+            doituong = serializer.data.get('doituong')
+            return JsonResponse(
+                {
+                    'Thong tin giay' : {
+                        'tendanhmuc' : tendanhmuc,
+                        'loaigiay' : loaigiay,
+                        'hangsanxuat' : hangsanxuat,
+                        'giatien' : giatien,
+                        'doituong' : doituong
+                    },
+                    'List mau sac co': colour_list,
+                    'List kich thuoc co' : size_list
+                }, safe= False
+                , status=status.HTTP_200_OK
+            )          
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -416,78 +472,5 @@ class ShowDetailsAccount(APIView):
             traceback.print_exc()
             return Response(
                 {'error': 'Something went wrong'},
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-#Cac class tim kiem cho client va server
-class GiayFilter(django_filters.FilterSet):
-    tendanhmuc = django_filters.CharFilter(field_name= 'tendanhmuc', label= 'Search',ookup_expr='iexact')
-
-
-class GiayList(generics.ListAPIView):
-    queryset = Danhmucgiay.objects.all()
-    serializer_class = DanhMucGiaySerializer
-    filter_backends = [filters.DjangoFilterBackend]
-    filter_class = GiayFilter
-
-
-def get_listgiay(request):
-    giay_filter = GiayFilter(request.GET, queryset = Danhmucgiay.objects.all())
-    context = {
-        'form' : giay_filter.form,
-        'giay' : giay_filter.qs
-    }
-    return render(request, '', context)
-
-class GetDetailsGiay(APIView):
-    serializer_class = ChitietGiaySerializer
-
-    permission_classes = (permissions.AllowAny, )
-
-    def get(self, request):
-        colour_list = []
-        size_list = []
-
-        try:
-            data = request.data
-            iddanhmuc = data['iddanhmuc']
-            list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
-            list_giay_seria = self.serializer_class(list_giay, many = True)
-            for group in list_giay_seria.data:
-                giay = Chitietgiay.objects.get(iddanhmuc = group.get('iddanhmuc'))
-                #Neu het hang , bo qua mau giay nay
-                if giay.sotonkho == 0:
-                    continue
-                else:
-                    colour = giay.mausac
-                    size = giay.kichco
-                    size_list.append(size + ', ')
-                    colour_list.append(colour + ', ')
-            danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
-            serializer = DanhMucGiaySerializer(danhmuc)
-            tendanhmuc = serializer.data.get('tendanhmuc')
-            loaigiay = serializer.data.get('loaigiay')
-            hangsanxuat = serializer.data.get('hangsanxuat')
-            giatien = serializer.data.get('giatien')
-            doituong = serializer.data.get('doituong')
-            return JsonResponse(
-                {
-                    'Thong tin giay' : {
-                        'tendanhmuc' : tendanhmuc,
-                        'loaigiay' : loaigiay,
-                        'hangsanxuat' : hangsanxuat,
-                        'giatien' : giatien,
-                        'doituong' : doituong
-                    },
-                    'List mau sac co': colour_list,
-                    'List kich thuoc co' : size_list
-                }, safe= False
-                , status=status.HTTP_200_OK
-            )          
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )

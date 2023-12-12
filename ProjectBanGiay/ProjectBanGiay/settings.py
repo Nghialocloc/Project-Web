@@ -60,7 +60,7 @@ ROOT_URLCONF = 'ProjectBanGiay.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,6 +74,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ProjectBanGiay.wsgi.application'
+
 #install pymsql for Mysql Db
 pymysql.version_info = (2, 1, 1, "final", 0)
 pymysql.install_as_MySQLdb()
@@ -114,23 +115,23 @@ AUTH_PASSWORD_VALIDATORS = [
 # Add rest_framework_simplejwt.authentication.JWTAuthentication to 
 # Django REST Framework authentication strategies tuple:
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticated',
-#     ],
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ],
-# }
-
 REST_FRAMEWORK = {
-   'DEFAULT_AUTHENTICATION_CLASSES': (
-       'rest_framework.authentication.TokenAuthentication',
-   ),
-   'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAdminUser'
-   ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
 }
+
+# REST_FRAMEWORK = {
+#    'DEFAULT_AUTHENTICATION_CLASSES': (
+#        'rest_framework.authentication.TokenAuthentication',
+#    ),
+#    'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAdminUser'
+#    ),
+# }
 
 # Configure django-rest-framework-simplejwt to use the Authorization: JWT
 SIMPLE_JWT = {
@@ -149,8 +150,8 @@ SIMPLE_JWT = {
 EMAIL_BACKEND  = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = '587'
-EMAIL_HOST_USER = 'tserverside@gmail.com'
-EMAIL_HOST_PASSWORD = 'xx`5aO]-ZuJBqyRh'
+EMAIL_HOST_USER = 'modzila1003@gmail.com'
+EMAIL_HOST_PASSWORD = 'sutn-kvvg-olsc-gxbw'
 EMAI_USE_TLS = True
 
 # Internationalization

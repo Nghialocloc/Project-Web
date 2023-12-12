@@ -1,10 +1,10 @@
-from django.shortcuts import render , HttpResponse
+from django.shortcuts import HttpResponse
 from django.http import JsonResponse
 from pymysql import NULL
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, authentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
 from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
 from .models import UserAccount, UserAccountManager
@@ -19,18 +19,8 @@ import datetime
 User = get_user_model()
 
 # Create your views here.
-def home(request) :
-    try:
-        khachhangaccount = TaikhoanKhachhang.objects.all()
-        khach = TaiKhoanKGSerializer(khachhangaccount, many = True)
-        return JsonResponse(data=khach.data, safe= False, status=status.HTTP_200_OK)
-    except:
-        traceback.print_exc()
-        return Response(
-            {'error': 'Something went wrong'},
-                status= status.HTTP_400_BAD_REQUEST
-        )
-
+def is_valid_param(param) :
+    return param != " " and param is not None
 
 
 def id_generator (size = 5, chars=string.digits):
@@ -61,15 +51,15 @@ class ManageAccount(APIView):
             
             if password ==  re_password:
                 if len(password) >= 8:
-                    if not User.objects.filter(email=email).exists():
+                    if not UserAccount.objects.filter(email=email).exists():
                         if not is_manager:
-                            UserAccountManager.create_user(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
+                            User.objects.create_user(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
                             return Response(
                                 {"success": "User successfully created"},
                                 status= status.HTTP_201_CREATED
                             )
                         else: 
-                            UserAccountManager.create_manager(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
+                            User.objects.create_manager(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
                             return Response(
                                 {"success": "Manager successfully created"},
                                 status= status.HTTP_201_CREATED
@@ -99,13 +89,10 @@ class ManageAccount(APIView):
 
     def get(self, request, format=None):
         try:
-            user = request.user
-            user = UserAccountSerializer(user)
-            
+            userAll = UserAccount.objects.all()
+            user = UserAccountSerializer(userAll, many=True)
             return Response(
-                {
-                    'user': user.data,
-                },
+                {'user': user.data,},
                 status=status.HTTP_200_OK
             )
             
@@ -150,7 +137,7 @@ class ManageAccount(APIView):
                 account.delete()
                 return Response(
                     {'error': 'Delete successful'}, 
-                    status= status.HTTP_204_NO_CONTENT
+                    status= status.HTTP_200_OK
                 )
         except Exception as e:
             traceback.print_exc()
@@ -158,12 +145,32 @@ class ManageAccount(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['data'] = UserAccountSerializer(self.user).data
-        return data
+
+
+class LoginView(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request):
+        try:
+            data = request.data
+            email = data['email']
+            password = data['password']
+            user = User.objects.filter(email=email).first()
+
+            if user is None:
+                raise AuthenticationFailed('User not found')
+            
+            if not user.check_password(password):
+                raise AuthenticationFailed("Incorrect password")
+
+            return Response({"message" : "Success log in"})
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 #Class quan li danh muc giay
@@ -174,9 +181,39 @@ class ManageDanhMucGiay(APIView):
     permission_classes = (permissions.AllowAny, )
 
     def get(self, request):
-        loaigiay = Danhmucgiay.objects.order_by('iddanhmuc').all()
-        serializer = self.serializer_class(loaigiay, many=True)
-        return JsonResponse({'List danh muc giay' : serializer.data}, safe= False)
+        try:
+            data = request.data
+            loaigiay = data['loaigiay']
+            hangsanxuat = data['hangsanxuat']
+            tugiatien = data['tugiatien']
+            dengiatien = data['dengiatien']
+            doituong = data['doituong']
+
+            danhmucgiay = Danhmucgiay.objects.all()
+
+            if is_valid_param(loaigiay):
+                danhmucgiay = danhmucgiay.filter(loaigiay=loaigiay)
+
+            if is_valid_param(tugiatien):
+                danhmucgiay = danhmucgiay.filter(giatien__gte = tugiatien)
+
+            if is_valid_param(dengiatien):
+                danhmucgiay = danhmucgiay.filter(giatien__lte = dengiatien)
+
+            if is_valid_param(hangsanxuat):
+                danhmucgiay = danhmucgiay.filter(hangsanxuat = hangsanxuat)
+
+            if is_valid_param(doituong):
+                danhmucgiay = danhmucgiay.filter(doituong = doituong)
+            
+            serializer = self.serializer_class(danhmucgiay, many=True)
+            return JsonResponse({'List danh muc giay' : serializer.data}, safe= False)
+        except:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
     
     def post(self, request):
         try:
@@ -287,7 +324,8 @@ class ManageChitietGiay(APIView):
                 mausac = serializer.data.get('mausac')
                 sotonkho = serializer.data.get('sotonkho')
     
-                maugiay = Chitietgiay(idgiay=idgiay, iddanhmuc=iddanhmuc, kichco=kichco, mausac= mausac, sotonkho=sotonkho)
+                maugiay = Chitietgiay(idgiay=idgiay, iddanhmuc = Danhmucgiay(iddanhmuc=iddanhmuc), 
+                                      kichco=kichco, mausac= mausac, sotonkho=sotonkho)
                 maugiay.save()
                 return JsonResponse(serializer.data, safe=False, status=status.HTTP_201_CREATED)
             else:
@@ -296,6 +334,49 @@ class ManageChitietGiay(APIView):
                     {'error': 'Something went wrong'}, 
                     status= status.HTTP_400_BAD_REQUEST
                 )            
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get(self, request):
+        list_chitiet = []
+
+        try:
+            data = request.data
+            iddanhmuc = data['iddanhmuc']
+            danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+            serializer = DanhMucGiaySerializer(danhmuc)
+            tendanhmuc = serializer.data.get('tendanhmuc')
+            giatien = serializer.data.get('giatien')
+            list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
+            list_giay_seria = ChitietGiaySerializer(list_giay, many = True)
+            for group in list_giay_seria.data:
+                giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
+                #Neu het hang , bo qua mau giay nay
+                idgiay = giay.idgiay
+                colour = giay.mausac
+                size = giay.kichco
+                soluong = giay.sotonkho
+                list_chitiet.append(
+                    {
+                        'tendanhmuc' : tendanhmuc,
+                        'gia tien' : giatien,
+                        'id mau giay' : idgiay,
+                        'kich thuoc' : size,
+                        'mausac' : colour,
+                        'So ton kho' : soluong,
+                    }
+            )
+            return JsonResponse(
+                {
+                    'Thong tin thong ke' : list_chitiet
+                }
+                , safe= False
+                , status=status.HTTP_200_OK
+            )          
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -359,52 +440,6 @@ class ManageChitietGiay(APIView):
             )
 
 
-class DetailListDanhmuc(APIView):
-
-    permission_classes = (permissions.AllowAny, )
-
-    def get(self,request):
-        list_chitiet = []
-
-        try:
-            data = request.data
-            iddanhmuc = data['iddanhmuc']
-            danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
-            serializer = DanhMucGiaySerializer(danhmuc)
-            tendanhmuc = serializer.data.get('tendanhmuc')
-            giatien = serializer.data.get('giatien')
-            list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
-            list_giay_seria = ChitietGiaySerializer(list_giay, many = True)
-            for group in list_giay_seria.data:
-                giay = Chitietgiay.objects.get(iddanhmuc = group.get('iddanhmuc'))
-                #Neu het hang , bo qua mau giay nay
-                colour = giay.mausac
-                size = giay.kichco
-                soluong = giay.sotonkho
-            list_chitiet.append(
-                {
-                    'tendanhmuc' : tendanhmuc,
-                    'gia tien' : giatien,
-                    'kich thuoc' : size,
-                    'mausac' : colour,
-                    'So ton kho' : soluong,
-                }
-            )
-            return JsonResponse(
-                {
-                    'Thong tin thong ke' : list_chitiet
-                }
-                , safe= False
-                , status=status.HTTP_200_OK
-            )          
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
 #Class kiem soat order cua khachhang
 class ManageOrder(APIView):
     serializer_class = DonHangSerializer
@@ -414,7 +449,26 @@ class ManageOrder(APIView):
     #Tra ve chi tiet thong tin don hang
     def get(self, request):
         try:
+            data = request.data
+            tungay = data['tu ngay']
+            denngay = data['den ngay']
+            trangthai = data['trangthai']
+            if denngay < tungay:
+                 return Response(
+                    {'error': 'From day must not set behind to date'},
+                    status= status.HTTP_400_BAD_REQUEST
+                )
             donhang = Donhang.objects.order_by('iddonhang').all()
+
+            if is_valid_param(tungay):
+                donhang = donhang.filter(createday__gte = tungay)
+
+            if is_valid_param(denngay):
+                donhang = donhang.filter(createday__lte = denngay)
+
+            if is_valid_param(trangthai):
+                donhang = donhang.filter(trangthai=trangthai)
+
             serializer = self.serializer_class(donhang, many=True)
             return JsonResponse({'List don hang cua khach' :serializer.data}, safe= False)
         except:

@@ -6,11 +6,6 @@ User = get_user_model()
 
 
 
-class UserAccountSerializer (serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'tennhanvien', 'tenchucvu', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',) 
-
 class DanhMucGiaySerializer (serializers.ModelSerializer):
     class Meta:
         model = Danhmucgiay
@@ -40,6 +35,21 @@ class HDNhapHangSerializer (serializers.ModelSerializer):
     class Meta:
         model = HoadonNhapHang
         fields = ( 'iddonhang', 'idkhachhang', 'sotienthanhtoan', 'createday', 'createby',)
+
+class UserAccountSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'tennhanvien', 'tenchucvu', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',) 
+
+# class UserAccountSerializer (serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ('id', 'email','username', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',)
+
+# class NhanvienSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Nhanvien
+#         fields = ( 'idnhanvien','tennhanvien', 'tenchucvu', 'diachi', 'sdt',)
 
 class KhachhangSerializer(serializers.ModelSerializer):
     class Meta:
