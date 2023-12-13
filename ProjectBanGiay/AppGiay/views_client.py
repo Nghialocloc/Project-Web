@@ -62,7 +62,7 @@ def remove_giay(request_data,idchitiet):
     CTdonhang.delete()
     return money
 
-def cofirm_donhang(request_data):
+def cofirm_donhang(request_data, tenkhachhang,diachi,email,sdt):
     iddonhang = request_data['iddonhang']
     idkhachhang = request_data['idkhachhang']
     if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
@@ -80,15 +80,11 @@ def cofirm_donhang(request_data):
             idkh = id_generator(size=5)
             if (Khachhang.objects.filter(idkhachhang = idkh).count() == 0):
                 break
-        tenkhachhang = request_data['tenkhachhang']
-        diachi = request_data['diachi']
-        email = request_data['email']
-        sdt = request_data['sdt']
         khachhang = Khachhang(idkhachhang = idkh, tenkhachhang=tenkhachhang, diachi=diachi, email=email, sdt=sdt)
         khachhang.save()
 
         donhang = Donhang.objects.get(iddonhang = iddonhang)
-        donhang.idkhachhang = idkh
+        donhang.idkhachhang = Khachhang(idkhachhang=idkh)
         donhang.trangthai = 'Confirm'
         donhang.save()
         return Response(DonHangSerializer(donhang).data, status=status.HTTP_202_ACCEPTED)
@@ -103,17 +99,16 @@ class ManageGioHang(APIView):
     # Tao lan dau tien
     def post(self, request):
         try: 
-            data = request.data
-            idkhachhang = data['idkhachhang']
-            idkhachhang == 10000
+            idkhachhang = 10000
             while True:
-                iddonhang = id_generator(size=10)
+                iddonhang = id_generator(size=5)
                 if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
                     break
+            sotienthanhtoan = 0
             createday = datetime.date.today()
             trangthai = 'Checking'
-            donhangtm = Donhang(iddonhang = iddonhang, idkhachhang = idkhachhang, createday = createday, trangthai = trangthai,
-                                    confirmby = NULL, dvvanchuyen = NULL,tennv_vanchuyen = NULL,sdt = NULL, socccd = NULL, thoigiannhan = NULL)
+            donhangtm = Donhang(iddonhang = iddonhang, idkhachhang = Khachhang(idkhachhang=idkhachhang), sotienthanhtoan=sotienthanhtoan,
+                                createday = createday, trangthai = trangthai)
             donhangtm.save()
             return Response(DonHangSerializer(donhangtm).data, status=status.HTTP_201_CREATED)                  
         except Exception as e:
@@ -212,7 +207,11 @@ class ManageGioHang(APIView):
                 donhang.sotienthanhtoan -= money
                 donhang.save()
             elif action == 2:
-                cofirm_donhang(serializer.data)
+                tenkhachhang = data['tenkhachhang']
+                diachi = data['diachi']
+                email = data['email']
+                sdt = data['sdt']
+                cofirm_donhang(serializer.data,tenkhachhang,diachi,email,sdt)
             return Response(
                     {'Update success'}, 
                     status= status.HTTP_202_ACCEPTED
@@ -225,20 +224,29 @@ class ManageGioHang(APIView):
             )
 
     def delete(self, request):
-        try:
+        try: 
             data=request.data
             iddonhang = data['iddonhang']
-            list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
-            list_giay_seria = ChitietDHSerializer(list_giay, many = True)
-            for group in list_giay_seria.data:
-                giay = Chitietdonhang.objects.get(idchitiet = group.get('idchitiet'))
-                giay.delete()
-            donhang = Donhang.objects.get(iddonhang = iddonhang)
-            donhang.delete()
-            return Response(
-                {'error': 'Delete successful'}, 
-                status= status.HTTP_200_OK
-            )  
+            if Donhang.objects.filter(iddonhang = iddonhang).count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    ,safe=False 
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
+                if list_giay.count() != 0:
+                    list_giay_seria = ChitietDHSerializer(list_giay, many = True)
+                    for group in list_giay_seria.data:
+                        giay = Chitietdonhang.objects.get(idchitiet = group.get('idchitiet'))
+                        giay.delete()
+                donhang = Donhang.objects.get(iddonhang = iddonhang)
+                donhang.delete()
+                return JsonResponse(
+                    {'error': 'Delete successful'}
+                    ,safe=False 
+                    ,status= status.HTTP_204_NO_CONTENT
+                )        
         except Exception as e:
             traceback.print_exc()
             return Response(

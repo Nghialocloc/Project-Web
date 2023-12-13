@@ -9,7 +9,7 @@ urlpatterns = [
     path('manageChitietgiay', ManageChitietGiay.as_view()),
     path('manageAccount', ManageAccount.as_view()),
     path('manageOrder', ManageOrder.as_view()),
-    path('logIn', LoginView.as_view()),
+    path('login', LoginView.as_view()),
 
     #Client
     path('detailsGiay', GetDetailsGiay.as_view()),

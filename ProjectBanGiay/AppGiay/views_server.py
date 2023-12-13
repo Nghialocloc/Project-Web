@@ -151,24 +151,19 @@ class LoginView(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
-    def post(self, request):
+    def get(self, request, format=None):
         try:
-            data = request.data
-            email = data['email']
-            password = data['password']
-            user = User.objects.filter(email=email).first()
-
-            if user is None:
-                raise AuthenticationFailed('User not found')
+            user = request.user
+            user_seria = UserAccountSerializer(user)
+            return Response(
+                {'user': user_seria.data,},
+                status=status.HTTP_200_OK
+            )
             
-            if not user.check_password(password):
-                raise AuthenticationFailed("Incorrect password")
-
-            return Response({"message" : "Success log in"})
         except Exception as e:
             traceback.print_exc()
             return Response(
-                {'error': 'Some exeption happened'}, 
+                {'error': 'Something went wrong'},
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -493,7 +488,7 @@ class ManageOrder(APIView):
                 tennv_vanchuyen = data['iddonhang']
                 sdt = data['iddonhang']
                 socccd = data['iddonhang']
-                thoigiannhan = datetime.date.today()
+                thoigiannhan = datetime.datetime.now()
 
                 donhang = Donhang.objects.get(iddonhang = iddonhang) 
                 donhang.trangthai = 'Đang giao' 
@@ -536,10 +531,11 @@ class ManageOrder(APIView):
                 )
             else:
                 list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
-                list_giay_seria = ChitietDHSerializer(list_giay, many = True)
-                for group in list_giay_seria.data:
-                    giay = Chitietdonhang.objects.get(iddonhang = group.get('iddonhang'))
-                    giay.delete()
+                if list_giay.count() != 0:
+                    list_giay_seria = ChitietDHSerializer(list_giay, many = True)
+                    for group in list_giay_seria.data:
+                        giay = Chitietdonhang.objects.get(idchitiet = group.get('idchitiet'))
+                        giay.delete()
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.delete()
                 return JsonResponse(
@@ -553,7 +549,7 @@ class ManageOrder(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
 
 #Class quan li tai khoan khach hang
 class ManageKhachHangAccount(APIView):
