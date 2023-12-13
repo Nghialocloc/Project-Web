@@ -19,12 +19,12 @@ class ChitietGiaySerializer (serializers.ModelSerializer):
 class ChitietDHSerializer (serializers.ModelSerializer):
     class Meta:
         model = Chitietdonhang
-        fields = ('iddonhang', 'idgiay', 'soluong', 'dongia',)
+        fields = ('idchitiet','iddonhang', 'idgiay', 'soluong', 'dongia',)
 
 class ChitietHDNHSerializer (serializers.ModelSerializer):
     class Meta:
         model = ChitiethoadonNhapHang
-        fields = ( 'iddonhang', 'idgiay', 'soluong', 'dongia',) 
+        fields = ('idchitiet','iddonhang', 'idgiay', 'soluong', 'dongia',) 
 
 class DonHangSerializer (serializers.ModelSerializer):
     class Meta:

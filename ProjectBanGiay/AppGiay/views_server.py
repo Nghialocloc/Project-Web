@@ -470,7 +470,11 @@ class ManageOrder(APIView):
                 donhang = donhang.filter(trangthai=trangthai)
 
             serializer = self.serializer_class(donhang, many=True)
-            return JsonResponse({'List don hang cua khach' :serializer.data}, safe= False)
+            return JsonResponse(
+                {
+                    'List don hang cua khach' :serializer.data
+                }
+                ,safe= False)
         except:
             traceback.print_exc()
             return Response(
@@ -483,7 +487,7 @@ class ManageOrder(APIView):
             data = request.data
             iddonhang = data['iddonhang']
             action = data['action']
-            if action == 1:
+            if action == 0:
                 confirmby = data['iddonhang']
                 dvvanchuyen = data['iddonhang']
                 tennv_vanchuyen = data['iddonhang']
@@ -500,7 +504,7 @@ class ManageOrder(APIView):
                 donhang.socccd = socccd, 
                 donhang.thoigiannhan = thoigiannhan
                 donhang.save()
-            elif action == 2 :
+            elif action == 1 :
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.trangthai = 'Hoàn thành'
                 donhang.save()
