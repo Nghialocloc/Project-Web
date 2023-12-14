@@ -75,28 +75,28 @@ class AuthUserUserPermissions(models.Model):
 
 #Account Managerclass
 class UserAccountManager(BaseUserManager):
-    def create_user(self, email, tennhanvien, tenchucvu, gioitinh, ngaysinh, date_joined, password = None):
+    def create_customer(self, email, accountname, sex, brithday, joined, password = None):
         if not email:
             raise ValueError('User must have email address')
         
         email = self.normalize_email(email)
-        user = self.model(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, 
-                          gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined)
+        user = self.model(email = email, accountname = accountname, gioitinh = sex, ngaysinh = brithday, date_joined =joined)
         
         user.set_password(password)
         user.save()
         
         return user
     
-    def create_manager(self, email, tennhanvien, tenchucvu, gioitinh, ngaysinh, date_joined, password = None):
-        user = self.create_user(email, tennhanvien,tenchucvu, gioitinh, ngaysinh, date_joined, password)
+    def create_manager(self, email, accountname, sex, brithday, joined,password = None):
+        user = self.create_customer(email, accountname, sex, brithday, joined, password)
         user.is_manager = True
         
         user.save()
 
         return user
-    def create_superuser(self, email, fullName, role, sex, brithday, joined,password = None):
-        user = self.create_user(self, email, fullName, role, sex, brithday, joined,password)
+    
+    def create_superuser(self, email, accountname, sex, brithday, joined,password = None):
+        user = self.create_customer(self, email, accountname,sex, brithday, joined,password)
         
         user.is_superuser = True
         user.is_staff = True
@@ -106,11 +106,11 @@ class UserAccountManager(BaseUserManager):
         
         return user
 
+
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(db_column='IDUser', primary_key=True) # Field name made lowercase.
-    email = models.EmailField( max_length=254, unique= True ) # Field name made lowercase.
-    tennhanvien = models.CharField(db_column='TenNhanVien', max_length=50)  # Field name made lowercase.
-    tenchucvu = models.CharField(db_column='ChucVu', max_length=50)  # Field name made lowercase.
+    email = models.EmailField(db_column='Email', max_length=100, unique= True)  # Field name made lowercase.
+    accountname = models.CharField( max_length=100, unique= True, default= "Guest" ) # Field name made lowercase.
     gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
     ngaysinh = models.DateField(db_column='NgaySinh')  # Field name made lowercase.
     date_joined = models.DateTimeField()
@@ -120,74 +120,16 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     objects = UserAccountManager()
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['tennhanvien']
+    REQUIRED_FIELDS = ['accountname']
     
     def get_full_name(self):
-        return self.tennhanvien
+        return self.accountname
     
     def get_short_name(self):
-        return self.tennhanvien 
+        return self.accountname
     
     def __str__(self):
         return self.email
-    
-
-#Test class
-# class UserAccountManager(BaseUserManager):
-#     def create_customer(self, email, userName, sex, brithday, joined,password = None):
-#         if not email:
-#             raise ValueError('User must have email address')
-        
-#         email = self.normalize_email(email)
-#         user = self.model(email = email, username = userName, gioitinh = sex, ngaysinh = brithday, date_joined =joined)
-        
-#         user.set_password(password)
-#         user.save()
-        
-#         return user
-    
-#     def create_manager(self, email, userName, sex, brithday, joined,password = None):
-#         user = self.create_user(self, email, userName, sex, brithday, joined,password)
-#         user.is_manager = True
-        
-#         user.save()
-
-#         return user
-#     def create_superuser(self, email, userName, sex, brithday, joined,password = None):
-#         user = self.create_user(self, email, userName,sex, brithday, joined,password)
-        
-#         user.is_superuser = True
-#         user.is_staff = True
-#         user.is_manager = True
-        
-#         user.save()
-        
-#         return user
-
-
-# class UserAccount(AbstractBaseUser, PermissionsMixin):
-#     id = models.AutoField(db_column='IDUser', primary_key=True) # Field name made lowercase.
-#     email = models.CharField(db_column='Email', max_length=100)  # Field name made lowercase.
-#     username = models.EmailField( max_length=100, unique= True ) # Field name made lowercase.
-#     gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
-#     ngaysinh = models.DateField(db_column='NgaySinh')  # Field name made lowercase.
-#     date_joined = models.DateTimeField()
-#     is_active = models.BooleanField(default= True)
-#     is_manager = models.BooleanField(default=False)
-    
-#     objects = UserAccountManager()
-    
-#     USERNAME_FIELD = 'username'
-#     REQUIRED_FIELDS = ['email']
-    
-#     def get_full_name(self):
-#         return self.username
-    
-#     def get_short_name(self):
-#         return self.username
-    
-#     def __str__(self):
-#         return self.email
 
 
 #DjangoGroup
@@ -236,28 +178,17 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 #DatabaseGroup
-# class Nhanvien(models.Model):
-#     idnhanvien = models.AutoField(db_column='IDNhanVien', primary_key=True)  # Field name made lowercase.
-#     tennhanvien = models.CharField(db_column='TenNhanVien', max_length=50)  # Field name made lowercase.
-#     tenchucvu = models.CharField(db_column='TenChucVu', max_length=50)  # Field name made lowercase.
-#     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
-#     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
+class Nhanvien(models.Model):
+    idnhanvien = models.AutoField(db_column='IDNhanVien', primary_key=True)  # Field name made lowercase.
+    tennhanvien = models.CharField(db_column='TenNhanVien', max_length=50)  # Field name made lowercase.
+    tenchucvu = models.CharField(db_column='TenChucVu', max_length=50)  # Field name made lowercase.
+    diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
+    sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
+    id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser') # Field name made lowercase.
 
-#     class Meta:
-#         managed = False
-#         db_table = 'nhanvien'
-
-
-# class Khachhang(models.Model):
-#     idkhachhang = models.AutoField(db_column='IDKhachHang', primary_key=True)  # Field name made lowercase.
-#     tenkhachhang = models.CharField(db_column='TenKhachHang', max_length=50)  # Field name made lowercase.
-#     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
-#     email = models.CharField(db_column='Email', max_length=100)  # Field name made lowercase.
-#     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
-
-#     class Meta:
-#         managed = False
-#         db_table = 'khachhang'
+    class Meta:
+        managed = False
+        db_table = 'nhanvien'
 
 
 class Khachhang(models.Model):
@@ -266,6 +197,8 @@ class Khachhang(models.Model):
     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
     email = models.CharField(db_column='Email', max_length=100)  # Field name made lowercase.
     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
+    diemtichluy = models.SmallIntegerField(db_column='DiemTichLuy',blank=True, null=True)  # Field name made lowercase.
+    id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser',blank=True, null=True) # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -352,30 +285,15 @@ class HoadonNhapHang(models.Model):
         db_table = 'hoadon_nhap_hang'
 
 
-class TaikhoanKhachhang(models.Model):
-    idtaikhoan = models.AutoField(db_column='IDTaiKhoan', primary_key=True)  # Field name made lowercase.
-    idkhachhang = models.CharField(db_column='IDKhachHang', max_length=255)  # Field name made lowercase.
-    username = models.CharField(db_column='Username', max_length=30)  # Field name made lowercase.
-    password = models.CharField(db_column='Password', max_length=30)  # Field name made lowercase.
-    gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
-    ngaysinh = models.DateField(db_column='NgaySinh')  # Field name made lowercase.
-    diemtichluy = models.IntegerField(db_column='DiemTichLuy')  # Field name made lowercase.
-    ngaylaptk = models.DateField(db_column='NgayLapTK')  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'taikhoan_khachhang'
-
-
 class Reviewsanpham(models.Model):
     idreview = models.AutoField(db_column='IDReview', primary_key=True)  # Field name made lowercase.
-    idtaikhoan = models.ForeignKey('TaikhoanKhachhang', models.DO_NOTHING, db_column='IDTaiKhoan')  # Field name made lowercase.
+    id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDUser')  # Field name made lowercase.
     idloaigiay = models.ForeignKey('Danhmucgiay', models.DO_NOTHING, db_column='IDLoaiGiay')  # Field name made lowercase.
     comment = models.CharField(db_column='Comment', max_length=300)  # Field name made lowercase.
     createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'reviewsanpham'
 
 

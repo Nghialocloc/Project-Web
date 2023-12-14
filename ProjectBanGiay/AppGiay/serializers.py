@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
-from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
+from .models import Danhmucgiay,Chitietgiay,Khachhang,Nhanvien,Reviewsanpham
 User = get_user_model()
 
 
@@ -39,30 +39,20 @@ class HDNhapHangSerializer (serializers.ModelSerializer):
 class UserAccountSerializer (serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'tennhanvien', 'tenchucvu', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',) 
+        fields = ('id', 'email','accountname', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',)
 
-# class UserAccountSerializer (serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ('id', 'email','username', 'gioitinh', 'ngaysinh', 'date_joined', 'is_manager',)
-
-# class NhanvienSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Nhanvien
-#         fields = ( 'idnhanvien','tennhanvien', 'tenchucvu', 'diachi', 'sdt',)
+class NhanvienSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nhanvien
+        fields = ( 'idnhanvien','tennhanvien', 'tenchucvu', 'diachi', 'sdt', 'id',)
 
 class KhachhangSerializer(serializers.ModelSerializer):
     class Meta:
         model = Khachhang
-        fields = ( 'idkhachhang','tenkhachhang', 'diachi', 'email', 'sdt',)
-
-class TaiKhoanKGSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaikhoanKhachhang
-        fields = ( 'idtaikhoan','idkhachhang', 'username', 'password', 'gioitinh', 'ngaysinh', 'diemtichluy', 'ngaylaptk')
+        fields = ( 'idkhachhang','tenkhachhang', 'diachi', 'email', 'sdt', 'id','diemtichluy')
 
 class ReviewSPSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reviewsanpham
-        fields = ( 'idreview','idtaikhoan','idloaigiay', 'comment', 'createday')
+        fields = ( 'idreview','id','idloaigiay', 'comment', 'createday')
 

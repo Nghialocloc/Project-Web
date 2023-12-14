@@ -6,10 +6,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
-from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
+from .models import Danhmucgiay,Chitietgiay,Khachhang,Reviewsanpham
 from .models import UserAccount, UserAccountManager
 from .serializers import ChitietDHSerializer,ChitietHDNHSerializer,HDNhapHangSerializer,DonHangSerializer
-from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,TaiKhoanKGSerializer,ReviewSPSerializer
+from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,ReviewSPSerializer
 from .serializers import UserAccountSerializer
 from django.contrib.auth import get_user_model
 import traceback
@@ -147,7 +147,6 @@ class ManageGioHang(APIView):
                 giatien = danhmucgiay.giatien
                 doituong = danhmucgiay.doituong
 
-                idchitiet = group.get('idchitiet')
                 soluong = group.get('soluong')
 
                 list_giay.append(
@@ -320,17 +319,26 @@ class ManageReview(APIView):
     permission_classes = (permissions.AllowAny, )
 
     def post(self, request):
-        try: 
+        try:
+            user = request.user
+            user_id = user.data['id']
+            if user.is_manager:
+                return Response(
+                    {'error': 'Manage does not have permission to do this' }
+                    , status=status.HTTP_403_FORBIDDEN
+                )
+
             data = request.data
+            # user_id = data['id']
+
             while True:
-                idreview = id_generator(size=5)
-                if (Reviewsanpham.objects.filter(idreview = idreview).count() == 0):
+                review = id_generator(size=5)
+                if (Reviewsanpham.objects.filter(idreview = review).count() == 0):
                     break
-            idtaikhoan = data['idtaikhoan']
             iddanhmuc = data['iddanhmuc']
             comment = data['comment']
             createday = datetime.date.today()
-            review = Reviewsanpham(idreview,idtaikhoan = TaikhoanKhachhang(idtaikhoan=idtaikhoan), idloaigiay= Danhmucgiay(iddanhmuc=iddanhmuc)
+            review = Reviewsanpham(idreview=review, id = UserAccount(id=user_id), idloaigiay= Danhmucgiay(iddanhmuc=iddanhmuc)
                                    ,comment=comment, createday=createday)
             review.save()
             return Response(
@@ -346,6 +354,8 @@ class ManageReview(APIView):
 
     def get(self, request):
         try:
+            user = request.user
+            user_id = user.data['id']
             list_review = []
             data = request.data
             iddanhmuc = data['iddanhmuc']
@@ -353,9 +363,9 @@ class ManageReview(APIView):
             serializer = self.serializer_class(review, many=True)
             for group in serializer.data:
                 one = Reviewsanpham.objects.get(idreview = group.get('idreview'))
-                host = TaikhoanKhachhang.objects.get(idtaikhoan = group.get('idtaikhoan'))
+                host = UserAccount.objects.get(id=user_id)
                 
-                tenkhach = host.username
+                tenkhach = host.accountname
                 comment = one.comment
 
                 list_review.append(
@@ -418,7 +428,7 @@ class ManageReview(APIView):
             )
 
 
-#Lay lich su mua hang cua khach cho server and client
+# #Lay lich su mua hang cua khach cho server and client
 class HistoryActivities(APIView):
 
     permission_classes = (permissions.AllowAny, )
@@ -426,10 +436,11 @@ class HistoryActivities(APIView):
     def get(self, request):
         try: 
             list_muaban = []
-            data = request.data
-            idtaikhoan = data['idtaikhoan']
-            taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan=idtaikhoan)
-            khachhang = taikhoan.idkhachhang
+            user = request.user
+
+            user_id = user.data['id']
+            khachhang = Khachhang.objects.get(id=user_id)
+            danhsachdon = Donhang.objects.filter(idkhachhang = khachhang.idkhachhang)
             danhsachdon = Donhang.objects.filter(idkhachhang = khachhang)
             danhsachdon_seria = DonHangSerializer(danhsachdon, many= True)
             for group in danhsachdon_seria.data:
@@ -462,20 +473,21 @@ class ShowDetailsAccount(APIView):
 
     def get(self, request):
         try:
-            data = request.data
-            idtaikhoan = data['idtaikhoan']
-            taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan = idtaikhoan)
-            
-            thongtin = Khachhang.objects.get(idkhachhang = taikhoan.idkhachhang)
+            user = request.user
+
+            user_id = user.data['id']
+            taikhoan = UserAccount.objects.get(id=user_id)
+            thongtin = Khachhang.objects.get(id=user_id)
+
             name = thongtin.tenkhachhang
             address = thongtin.diachi
             email = thongtin.email
             phonenumber = thongtin.sdt
+            diemtichluy = thongtin.diemtichluy
 
             sex =  taikhoan.gioitinh
             brithday = taikhoan.ngaysinh
-            diemtichluy = taikhoan.diemtichluy
-            createday = taikhoan.ngaylaptk
+            createday = taikhoan.date_joined
             return Response(
                 {
                     'Thong tin khach hang' : {

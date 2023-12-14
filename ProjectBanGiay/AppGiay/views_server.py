@@ -6,10 +6,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
-from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
+from .models import Danhmucgiay,Chitietgiay,Khachhang,Reviewsanpham,Nhanvien
 from .models import UserAccount, UserAccountManager
 from .serializers import ChitietDHSerializer,ChitietHDNHSerializer,HDNhapHangSerializer,DonHangSerializer
-from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,TaiKhoanKGSerializer,ReviewSPSerializer
+from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,ReviewSPSerializer
 from .serializers import UserAccountSerializer
 from django.contrib.auth import get_user_model
 import traceback
@@ -26,6 +26,41 @@ def is_valid_param(param) :
 def id_generator (size = 5, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+def insert_khachhang(requested_data,Email,accountName,user):
+    while True:
+        khachhang = id_generator(size=5)
+        if (Khachhang.objects.filter(idkhachhang=khachhang).count() == 0):
+            break
+    tenkhachhang = accountName
+    email = Email
+    diachi = requested_data['diachi']
+    sdt = requested_data['sdt']
+    user_id = user
+    diemtichluy = 0
+    
+    customer = Khachhang(idkhachhang=khachhang,tenkhachhang=tenkhachhang, 
+                         email=email,diachi=diachi,sdt=sdt,diemtichluy=diemtichluy, id = user_id)
+    customer.save()
+    
+    return customer
+
+def insert_nhanvien(requested_data,Email,accountName,user):
+    while True:
+        nhanvien = id_generator(size=5)
+        if (Nhanvien.objects.filter(idnhanvien=nhanvien).count() == 0):
+            break
+    tennhanvien = accountName
+    email = Email
+    tenchucvu = requested_data['tenchucvu']
+    diachi = requested_data['diachi']
+    sdt = requested_data['sdt']
+    user_id = user
+    
+    manager = Nhanvien(idnhanvien=nhanvien,tennhanvien=tennhanvien, tenchucvu=tenchucvu
+                        ,diachi=diachi,sdt=sdt, id = user_id)
+    manager.save()
+    
+    return manager
 
 #Class quan li he thong nhan vien
 class ManageAccount(APIView):
@@ -35,11 +70,10 @@ class ManageAccount(APIView):
         try:
             data = request.data
             
+            password = data['password']
             email = data['email']
             email = email.lower()
-            password = data['password']
-            tennhanvien = data['fullName']
-            tenchucvu = data['role']
+            accountname = data['accountname']
             gioitinh = data['gioitinh']
             ngaysinh = data['ngaysinh']
             date_joined = datetime.date.today()
@@ -53,13 +87,17 @@ class ManageAccount(APIView):
                 if len(password) >= 8:
                     if not UserAccount.objects.filter(email=email).exists():
                         if not is_manager:
-                            User.objects.create_user(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
+                            customer = User.objects.create_customer(email = email, accountname=accountname, sex = gioitinh, 
+                                                                  brithday = ngaysinh, joined = date_joined, password=password)
+                            insert_khachhang(requested_data=data,Email=email,accountName=accountname,user=customer)
                             return Response(
                                 {"success": "User successfully created"},
                                 status= status.HTTP_201_CREATED
                             )
                         else: 
-                            User.objects.create_manager(email = email, tennhanvien = tennhanvien, tenchucvu = tenchucvu, gioitinh = gioitinh, ngaysinh = ngaysinh, date_joined = date_joined, password=password)
+                            manager = User.objects.create_manager(email = email, accountname=accountname, sex = gioitinh, 
+                                                                  brithday = ngaysinh, joined = date_joined, password=password)
+                            insert_nhanvien(requested_data=data,Email=email,accountName=accountname,user=manager)
                             return Response(
                                 {"success": "Manager successfully created"},
                                 status= status.HTTP_201_CREATED
@@ -357,8 +395,6 @@ class ManageChitietGiay(APIView):
                 soluong = giay.sotonkho
                 list_chitiet.append(
                     {
-                        'tendanhmuc' : tendanhmuc,
-                        'gia tien' : giatien,
                         'id mau giay' : idgiay,
                         'kich thuoc' : size,
                         'mausac' : colour,
@@ -367,7 +403,12 @@ class ManageChitietGiay(APIView):
             )
             return JsonResponse(
                 {
-                    'Thong tin thong ke' : list_chitiet
+                    'Thong tin thong ke' : 
+                    {
+                        'Ten danh muc' : tendanhmuc,
+                        'Gia tien' : giatien,
+                        'Cac mau giay' : list_chitiet
+                    }
                 }
                 , safe= False
                 , status=status.HTTP_200_OK
@@ -383,9 +424,6 @@ class ManageChitietGiay(APIView):
         try: 
             data= request.data
             idgiay = data['idgiay']
-            iddanhmuc = data['iddanhmuc']
-            kichco = data['kichco']
-            mausac = data['mausac']
             sotonkho = data['sotonkho']
             maugiay = Chitietgiay.objects.filter(idgiay=idgiay)
             if maugiay.count() == 0:
@@ -395,7 +433,7 @@ class ManageChitietGiay(APIView):
                     ,status= status.HTTP_403_FORBIDDEN
                 )
             else:
-                maugiay.update(idgiay=idgiay, iddanhmuc = iddanhmuc, kichco=kichco, mausac=mausac, sotonkho=sotonkho)
+                maugiay.update(idgiay=idgiay, sotonkho=sotonkho)
                 maugiay_seria = ChitietGiaySerializer(maugiay, many= True)
                 return JsonResponse(
                     {'Update success' : maugiay_seria.data}
@@ -543,114 +581,6 @@ class ManageOrder(APIView):
                     ,safe=False 
                     ,status= status.HTTP_204_NO_CONTENT
                 )        
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-#Class quan li tai khoan khach hang
-class ManageKhachHangAccount(APIView):
-
-    serializer_class = TaiKhoanKGSerializer
-
-    permission_classes = (permissions.AllowAny, )
-
-    def post(self, request):
-        try:
-            data = request.data
-            while True:
-                taikhoan = id_generator(size=10)
-                if (TaikhoanKhachhang.objects.filter(idtaikhoan = taikhoan).count() == 0):
-                    break
-            
-            idkhachhang = data['idkhachhang']
-            username = data['username']
-            password = data['password']
-            gioitinh = data['gioitinh']
-            ngaysinh = data['ngaysinh']
-            ngaylapTK = datetime.date.today()
-
-            re_password = data['re_password']
-
-            if password ==  re_password:
-                if len(password) >= 8:
-                    if not TaikhoanKhachhang.objects.filter(idkhachhang = idkhachhang).exists():
-                        if not TaikhoanKhachhang.objects.filter(username = username).exists():
-                            taikhoanMoi = TaikhoanKhachhang(idtaikhoan = taikhoan, idkhachhang = idkhachhang, username = username,
-                                                        gioitinh = gioitinh, ngaysinh= ngaysinh, ngaylapTK = ngaylapTK)
-                            taikhoanMoi.save()
-                            taikhoanMoi = TaiKhoanKGSerializer(taikhoanMoi)
-                            return Response(
-                                {"Account successfully created" : taikhoanMoi.data},
-                                status= status.HTTP_201_CREATED
-                            )
-                        else:
-                            traceback.print_exc()
-                            return Response(
-                                {'error': 'Username already exist'},
-                                status= status.HTTP_400_BAD_REQUEST
-                            )
-                    else:
-                        traceback.print_exc()
-                        return Response(
-                        {'error': 'Account already exist'},
-                        status= status.HTTP_400_BAD_REQUEST
-                        )
-                else:
-                    traceback.print_exc()
-                    return Response(
-                    {'error': 'Password must have more than 8 character'},
-                    status= status.HTTP_400_BAD_REQUEST
-                    )
-                    
-            else:
-                traceback.print_exc()
-                return Response(
-                    {'error': 'Password do not match'},
-                    status= status.HTTP_400_BAD_REQUEST
-                )
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Something went wrong!'},
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def get(self, request):
-        try:
-            khachhangaccount = TaikhoanKhachhang.objects.all()
-            taikhoan = TaiKhoanKGSerializer(khachhangaccount, many = True)
-            return JsonResponse(data=taikhoan.data, safe= False, status=status.HTTP_200_OK)
-        except:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Something went wrong'},
-                status= status.HTTP_400_BAD_REQUEST
-            )
-
-    def delete(self, request):
-        try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                idtaikhoan = request.data['idtaikhoan']
-                list_review = Reviewsanpham.objects.filter(idtaikhoan = idtaikhoan)
-                for group in list_review.data:
-                    review = Reviewsanpham.objects.get(idtaikhoan = group.get('idtaikhoan'))
-                    review.delete()
-                taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan = idtaikhoan)
-                taikhoan.delete()
-                return Response(
-                    {'Result': 'Delete successful'}, 
-                    status= status.HTTP_202_ACCEPTED
-                )
-            else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
         except Exception as e:
             traceback.print_exc()
             return Response(

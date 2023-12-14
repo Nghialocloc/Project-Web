@@ -1,7 +1,8 @@
 from django.urls import path
-from .views_server import ManageDanhMucGiay, ManageOrder, ManageKhachHangAccount, ManageChitietGiay
+from .views_server import ManageDanhMucGiay, ManageOrder, ManageChitietGiay
 from .views_server import LoginView, ManageAccount
-from .views_client import ManageGioHang, ManageReview, HistoryActivities, ShowDetailsAccount, GetDetailsGiay
+from .views_client import ManageGioHang, GetDetailsGiay
+from .views_client import ManageReview, HistoryActivities, ShowDetailsAccount
 
 urlpatterns = [
     #server
@@ -17,6 +18,5 @@ urlpatterns = [
     # path('review', ManageReview.as_view()),
     # path('lichsuMuahang', HistoryActivities.as_view()),
     # path('detailsAccount', ShowDetailsAccount.as_view()),
-    # path('manageGuestaccount', ManageKhachHangAccount.as_view()),
 
 ]
