@@ -1,6 +1,6 @@
 from django.urls import path
 from .views_server import ManageDanhMucGiay, ManageOrder, ManageChitietGiay
-from .views_server import LoginView, ManageAccount
+from .views_server import RetriveUserView, ManageAccount
 from .views_client import ManageGioHang, GetDetailsGiay
 from .views_client import ManageReview, HistoryActivities, ShowDetailsAccount
 
@@ -10,7 +10,7 @@ urlpatterns = [
     path('manageChitietgiay', ManageChitietGiay.as_view()),
     path('manageAccount', ManageAccount.as_view()),
     path('manageOrder', ManageOrder.as_view()),
-    path('login', LoginView.as_view()),
+    path('retrive', RetriveUserView.as_view()),
 
     #Client
     path('detailsGiay', GetDetailsGiay.as_view()),

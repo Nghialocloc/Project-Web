@@ -148,15 +148,17 @@ class ManageAccount(APIView):
                 return Response({'error': 'User does not have necessary permission' }, status=status.HTTP_403_FORBIDDEN)
             else:
                 number = request.data['id']
+                gioitinh = request.data['gioitinh']
+                ngaysinh = request.data['ngaysinh']
                 account = UserAccount.objects.get(id=number)
-                serializer = UserAccountSerializer(account, data=request.data)
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return Response(
-                        {'error': 'Mismatch data. Please check again'}, 
-                        status= status.HTTP_400_BAD_REQUEST
-                    )
+                account.gioitinh = gioitinh
+                account.ngaysinh = ngaysinh
+                account.save()
+                user_seria = UserAccountSerializer(account)
+                return Response(
+                    {'Update success': user_seria.data}, 
+                    status= status.HTTP_202_ACCEPTED
+                )
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -185,7 +187,7 @@ class ManageAccount(APIView):
             )
 
 
-class LoginView(APIView):
+class RetriveUserView(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
