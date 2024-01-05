@@ -1,10 +1,8 @@
 from django.shortcuts import HttpResponse
 from django.http import JsonResponse
-from pymysql import NULL
 from rest_framework import generics, permissions, status, authentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
 from .models import Danhmucgiay,Chitietgiay,Khachhang,Reviewsanpham,Nhanvien
 from .models import UserAccount, UserAccountManager
@@ -20,7 +18,7 @@ User = get_user_model()
 
 # Create your views here.
 def is_valid_param(param) :
-    return param != " " and param is not None
+    return param != " " and param is not None and param != ""
 
 
 def id_generator (size = 5, chars=string.digits):
@@ -494,7 +492,6 @@ class ManageOrder(APIView):
                     status= status.HTTP_400_BAD_REQUEST
                 )
             donhang = Donhang.objects.order_by('iddonhang').all()
-
             if is_valid_param(tungay):
                 donhang = donhang.filter(createday__gte = tungay)
 
@@ -543,6 +540,14 @@ class ManageOrder(APIView):
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.trangthai = 'Hoàn thành'
                 donhang.save()
+
+                idkhachhang = donhang.idkhachhang
+                khachhang = Khachhang.objects.get(idkhachhang=idkhachhang)
+                if UserAccount.objects.filter(id = khachhang.id).count() == 1:
+                    tichluy = donhang.sotienthanhtoan / 1000
+                    khachhang.diemtichluy += tichluy
+                else:
+                    pass
             else :
                 return  Response(
                     {'error': 'Something went wrong'}, 

@@ -19,7 +19,7 @@ import datetime
 User = get_user_model()
 
 def is_valid_param(param) :
-    return param != '' and param is not None
+    return param != '' and param is not None and param != ""
 
 def id_generator (size = 5, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -98,8 +98,14 @@ class ManageGioHang(APIView):
 
     # Tao lan dau tien
     def post(self, request):
-        try: 
-            idkhachhang = 10000
+        try:
+            user = request.user
+            if user.is_anonymous:
+                idkhachhang = 10000
+            else:
+                user_id = user.data['id']
+                khachhang = Khachhang.objects.get(id=user_id)
+                idkhachhang = khachhang.idkhachhang
             while True:
                 iddonhang = id_generator(size=5)
                 if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
@@ -110,7 +116,7 @@ class ManageGioHang(APIView):
             donhangtm = Donhang(iddonhang = iddonhang, idkhachhang = Khachhang(idkhachhang=idkhachhang), sotienthanhtoan=sotienthanhtoan,
                                 createday = createday, trangthai = trangthai)
             donhangtm.save()
-            return Response(DonHangSerializer(donhangtm).data, status=status.HTTP_201_CREATED)                  
+            return Response(DonHangSerializer(donhangtm).data, status=status.HTTP_201_CREATED)    
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -187,6 +193,7 @@ class ManageGioHang(APIView):
 
     def put(self, request):
         try:
+            user = request.user
             data = request.data
             iddonhang = data['iddonhang']
             action = data['action']
@@ -242,10 +249,120 @@ class ManageGioHang(APIView):
                 donhang = Donhang.objects.get(iddonhang = iddonhang)
                 donhang.delete()
                 return JsonResponse(
-                    {'error': 'Delete successful'}
+                    {'Result': 'Delete successful'}
                     ,safe=False 
-                    ,status= status.HTTP_204_NO_CONTENT
+                    ,status= status.HTTP_202_ACCEPTED
                 )        
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+#Class kiem soat review khach hang
+class ManageReview(APIView):
+
+    serializer_class = ReviewSPSerializer
+
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request):
+        try:
+            user = request.user
+            user_id = user.data['id']
+            if user.is_manager:
+                return Response(
+                    {'error': 'Manage does not have permission to do this' }
+                    , status=status.HTTP_403_FORBIDDEN
+                )
+
+            data = request.data
+            while True:
+                review = id_generator(size=5)
+                if (Reviewsanpham.objects.filter(idreview = review).count() == 0):
+                    break
+            iddanhmuc = data['iddanhmuc']
+            comment = data['comment']
+            createday = datetime.date.today()
+            review = Reviewsanpham(idreview=review, id = UserAccount(id=user_id), idloaigiay= Danhmucgiay(iddanhmuc=iddanhmuc)
+                                   ,comment=comment, createday=createday)
+            review.save()
+            return Response(
+                    ReviewSPSerializer(review).data
+                    ,status=status.HTTP_201_CREATED
+            )         
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get(self, request):
+        try:
+            list_review = []
+            user = request.user
+            user_id = user.data['id']
+            review = Reviewsanpham.objects.filter(id = user_id)
+            serializer = self.serializer_class(review, many=True)
+            for group in serializer.data:
+                one = Reviewsanpham.objects.get(idreview = group.get('idreview'))
+                danhmuc = Danhmucgiay.objects.get(iddanhmuc = group.get('idloaigiay'))
+                
+                tendanhmuc = danhmuc.tendanhmuc
+                comment = one.comment
+                createday = one.createday
+
+                list_review.append(
+                    {
+                        'San pham' : tendanhmuc,
+                        'Noi dung' : comment,
+                        'Ngay viet' : createday
+                    }
+                )
+            return JsonResponse(
+                {list_review}
+                , safe= False
+                , status = status.HTTP_200_OK
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request):
+        try:
+            data = request.data
+            idreview = data['idreview']
+            comment = data['comment']
+            review = Reviewsanpham.objects.get(idreview = idreview)
+            review.comment = comment
+            review.save()
+            return Response(
+                {'Update success' : ReviewSPSerializer(review).data}
+                ,status=status.HTTP_202_ACCEPTED
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request):
+        try:
+            data = request.data
+            idreview = data['idreview']
+            review = Reviewsanpham.objects.get(idreview = idreview)
+            review.delete()
+            return Response(
+                    {'Result': 'Delete successful'}, 
+                    status= status.HTTP_202_ACCEPTED
+                )   
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -311,59 +428,20 @@ class GetDetailsGiay(APIView):
             )
 
 
-#Class kiem soat review khach hang
-class ManageReview(APIView):
-
-    serializer_class = ReviewSPSerializer
+class GetReviewGiay(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
-    def post(self, request):
-        try:
-            user = request.user
-            user_id = user.data['id']
-            if user.is_manager:
-                return Response(
-                    {'error': 'Manage does not have permission to do this' }
-                    , status=status.HTTP_403_FORBIDDEN
-                )
-
-            data = request.data
-            # user_id = data['id']
-
-            while True:
-                review = id_generator(size=5)
-                if (Reviewsanpham.objects.filter(idreview = review).count() == 0):
-                    break
-            iddanhmuc = data['iddanhmuc']
-            comment = data['comment']
-            createday = datetime.date.today()
-            review = Reviewsanpham(idreview=review, id = UserAccount(id=user_id), idloaigiay= Danhmucgiay(iddanhmuc=iddanhmuc)
-                                   ,comment=comment, createday=createday)
-            review.save()
-            return Response(
-                    ReviewSPSerializer(review).data
-                    ,status=status.HTTP_201_CREATED
-            )         
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
     def get(self, request):
         try:
-            user = request.user
-            user_id = user.data['id']
             list_review = []
             data = request.data
             iddanhmuc = data['iddanhmuc']
             review = Reviewsanpham.objects.filter(idloaigiay=iddanhmuc)
-            serializer = self.serializer_class(review, many=True)
+            serializer = ReviewSPSerializer(review, many=True)
             for group in serializer.data:
                 one = Reviewsanpham.objects.get(idreview = group.get('idreview'))
-                host = UserAccount.objects.get(id=user_id)
+                host = UserAccount.objects.get(id = group.get('id'))
                 
                 tenkhach = host.accountname
                 comment = one.comment
@@ -384,42 +462,6 @@ class ManageReview(APIView):
                 , safe= False
                 , status = status.HTTP_200_OK
             )
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def put(self, request):
-        try:
-            data = request.data
-            idreview = data['idreview']
-            comment = data['comment']
-            review = Reviewsanpham.objects.get(idreview = idreview)
-            review.comment = comment
-            review.save()
-            return Response(
-                {'Update success' : ReviewSPSerializer(review).data}
-                ,status=status.HTTP_202_ACCEPTED
-            )
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def delete(self, request):
-        try:
-            data = request.data
-            idreview = data['idreview']
-            review = Reviewsanpham.objects.get(idreview = idreview)
-            review.delete()
-            return Response(
-                    {'Result': 'Delete successful'}, 
-                    status= status.HTTP_202_ACCEPTED
-                )   
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -494,11 +536,11 @@ class ShowDetailsAccount(APIView):
                         'Ten day du': name,
                         'Dia chi' : address,
                         'Email ' : email,
-                        'So dien thoai' : phonenumber
-                    },
-                    'Thong tin tai khoan' : {
+                        'So dien thoai' : phonenumber,
                         'Gioi tinh' : sex,
                         'Ngay sinh' : brithday,
+                    },
+                    'Tai khoan' : {
                         'Diem tich luy' : diemtichluy,
                         'Ngay lap' : createday}
                 }
