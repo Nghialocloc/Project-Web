@@ -9,6 +9,11 @@ import Shopping from "./Pages/Shopping";
 import Blog from "./Pages/Blog";
 import Contact from "./Pages/Contact";
 import Details from "./Pages/Details";
+import Dashboard from "./Admin/DashBoard";
+import { Fragment } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from "./Pages/LoginPage";
+import SignUp from "./Pages/SignUp";
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -20,7 +25,18 @@ function App() {
       {/* <About /> */}
       {/* <Blog /> */}
       {/* <Contact /> */}
-      <Details />
+      {/* <Details /> */}
+      {/* <Dashboard /> */}
+
+       <Router>
+        <Fragment>
+          <Routes>
+            <Route path="" element={<Details />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUp />} />
+          </Routes>
+        </Fragment>
+       </Router>
       </>
   );
 }
