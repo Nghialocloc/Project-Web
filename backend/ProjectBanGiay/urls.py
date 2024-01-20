@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,4 +27,4 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view()),
     path('api/token/verify/', TokenVerifyView.as_view()),
 
-]
+]+static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

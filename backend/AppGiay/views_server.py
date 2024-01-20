@@ -24,6 +24,8 @@ def is_valid_param(param) :
 def id_generator (size = 5, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+
+#Class quan li he thong nhan vien
 def insert_khachhang(requested_data,Email,accountName,user):
     while True:
         khachhang = id_generator(size=5)
@@ -60,7 +62,7 @@ def insert_nhanvien(requested_data,Email,accountName,user):
     
     return manager
 
-#Class quan li he thong nhan vien
+
 class ManageAccount(APIView):
     permission_classes = (permissions.AllowAny, )
     

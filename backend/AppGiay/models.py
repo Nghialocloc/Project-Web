@@ -224,6 +224,8 @@ class Chitietgiay(models.Model):
     kichco = models.FloatField(db_column='KichCo')  # Field name made lowercase.
     mausac = models.CharField(db_column='MauSac', max_length=20)  # Field name made lowercase.
     sotonkho = models.IntegerField(db_column='SoTonKho')  # Field name made lowercase.
+    # anhMatTren = models.ImageField(null=True, blank=True, upload_to="image/")
+    # anhMatBen = models.ImageField(null=True, blank=True, upload_to="image/")
 
     class Meta:
         managed = False
