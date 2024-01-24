@@ -40,7 +40,7 @@ function Footer() {
       </div>
       <div className="coppyright">
         <p>
-          <a href="trangchu.html">Mike Shoes Store</a> - All rights reserved ©
+          <a href="trangchu.jsx">Mike Shoes Store</a> - All rights reserved ©
           2023 - Designed by
           <span id="footer-G"> group 4th</span>
         </p>

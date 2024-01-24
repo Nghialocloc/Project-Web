@@ -75,7 +75,7 @@ function Cart() {
 
       <section id="cart-add" className="section-p1">
         <div id="coupon">
-          <h3>Aplly Coupon</h3>
+          <h3>Apply Coupon</h3>
           <div>
             <input type="text" placeholder="Nhập mã quà tặng" />
             <button className="normal">Apply</button>
