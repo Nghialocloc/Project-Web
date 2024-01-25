@@ -11,6 +11,7 @@ const data = [
     color: "white",
     doituong: "nam",
     category: "sneakers",
+    feature: true,
   },
   {
     img: "https://m.media-amazon.com/images/I/519MRhRKGFL._AC_UX575_.jpg",
@@ -22,6 +23,7 @@ const data = [
     color: "red",
     doituong: "nam",
     category: "sneakers",
+    feature: true,
   },
 
   {
@@ -34,6 +36,7 @@ const data = [
     color: "green",
     doituong: "nam",
     category: "sneakers",
+    feature: true,
   },
   {
     img: "https://m.media-amazon.com/images/I/71oEKkghg-L._AC_UX575_.jpg",
@@ -45,6 +48,7 @@ const data = [
     color: "black",
     doituong: "nam",
     category: "sneakers",
+    feature: false,
   },
   {
     img: "https://m.media-amazon.com/images/I/41M54ztS6IL._AC_SY625._SX._UX._SY._UY_.jpg",
@@ -55,6 +59,7 @@ const data = [
     color: "green",
     doituong: "nam",
     category: "flats",
+    feature: false,
   },
   {
     img: "https://m.media-amazon.com/images/I/71zKuNICJAL._AC_UX625_.jpg",
@@ -65,6 +70,7 @@ const data = [
     color: "black",
     category: "flats",
     doituong: "nam",
+    feature: false,
   },
 
   {
@@ -76,6 +82,7 @@ const data = [
     color: "white",
     category: "flats",
     doituong: "nam",
+    feature: false,
   },
 
   {
@@ -87,6 +94,7 @@ const data = [
     color: "green",
     category: "sneakers",
     doituong: "nam",
+    feature: false,
   },
 
   {
@@ -98,6 +106,7 @@ const data = [
     color: "blue",
     category: "sneakers",
     doituong: "nam",
+    feature: true,
   },
 
   {
@@ -109,6 +118,7 @@ const data = [
     color: "green",
     category: "sneakers",
     doituong: "nam",
+    feature: true,
   },
   // {
   //   img: "https://m.media-amazon.com/images/I/71E75yRwCDL._AC_UY575_.jpg",

@@ -54,22 +54,30 @@ function trangChu() {
         <h2>
           Winter is comming <span>30%</span> OFF
         </h2>
-        <button className="normal">Explore More</button>
+        <a href="shoping">
+          <button className="normal">Explore More</button>
+        </a>
       </section>
 
       <section id="banner3">
-        <div className="banner-box">
-          <h2>Upcomming season</h2>
-          <h3>Winteer Collection -30% OFF</h3>
-        </div>
-        <div className="banner-box banner-box2">
-          <h2>News Everyday</h2>
-          <h3>Fashion yourself</h3>
-        </div>
-        <div className="banner-box banner-box3">
-          <h2>Trendy</h2>
-          <h3>Catch off the trend</h3>
-        </div>
+        <a href="shoping">
+          <div className="banner-box">
+            <h2>Upcomming season</h2>
+            <h3>Winteer Collection -30% OFF</h3>
+          </div>
+        </a>
+        <a href="blog">
+          <div className="banner-box banner-box2">
+            <h2>News Everyday</h2>
+            <h3>Fashion yourself</h3>
+          </div>
+        </a>
+        <a href="blog">
+          <div className="banner-box banner-box3">
+            <h2>Trendy</h2>
+            <h3>Catch off the trend</h3>
+          </div>
+        </a>
       </section>
       <Productions />
       <Newsletter />
