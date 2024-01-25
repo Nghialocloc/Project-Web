@@ -1,4 +1,4 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import HttpResponse
 from django.http import JsonResponse
 from pymysql import NULL
 from rest_framework import generics, permissions, status
@@ -6,61 +6,85 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Chitietdonhang,ChitiethoadonNhapHang,HoadonNhapHang,Donhang
-from .models import Danhmucgiay,Chitietgiay,Khachhang,TaikhoanKhachhang,Reviewsanpham
+from .models import Danhmucgiay,Chitietgiay,Khachhang,Reviewsanpham
 from .models import UserAccount, UserAccountManager
 from .serializers import ChitietDHSerializer,ChitietHDNHSerializer,HDNhapHangSerializer,DonHangSerializer
-from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,TaiKhoanKGSerializer,ReviewSPSerializer
+from .serializers import DanhMucGiaySerializer,ChitietGiaySerializer,KhachhangSerializer,ReviewSPSerializer
 from .serializers import UserAccountSerializer
 from django.contrib.auth import get_user_model
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters import rest_framework as filters
-import django_filters
 import traceback
 import random, string
 import datetime
 
 User = get_user_model()
 
-def id_generator (size = 5, chars=string.ascii_uppercase + string.digits):
+def is_valid_param(param) :
+    return param != '' and param is not None and param != ""
+
+def id_generator (size = 5, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
 #Chinh sua chi tiet don hang
-def add_giay(request_data):
+def add_giay(request_data,iddanhmuc,soluong, mausac, kichco):
+    while True:
+        idchitiet = id_generator(size=5)
+        if (Chitietdonhang.objects.filter(idchitiet = idchitiet).count() == 0):
+            break
     iddonhang = request_data['iddonhang']
-    idgiay = request_data['idgiay']
-    giay = Danhmucgiay.objects.get(idgiay=idgiay)
-    money = giay.giatien
-    soluong = request_data['soluong']
+    danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+    money = danhmuc.giatien
     dongia = soluong * money
+
+    giay = Chitietgiay.objects.get(iddanhmuc=iddanhmuc, mausac=mausac, kichco=kichco)
+    idgiay = giay.idgiay
     if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
         return Response(
             {'error': 'Order not exist'}, 
             status= status.HTTP_404_NOT_FOUND
         )            
-    CTdonhang = Chitietdonhang(iddonhang=iddonhang, idgiay=idgiay, soluong=soluong, dongia=dongia)
+    CTdonhang = Chitietdonhang(idchitiet= idchitiet, iddonhang=Donhang(iddonhang=iddonhang), idgiay=Chitietgiay(idgiay=idgiay), 
+                               soluong=soluong, dongia=dongia)
     CTdonhang.save()
     
     return dongia
             
 
-def remove_giay(request_data):
-    CTdonhang = Chitietdonhang.objects.get(iddonhang= request_data['iddonhang'],
-                                            idgiay= request_data['idgiay'], 
-                                            soluong= request_data['soluong'])
-    remove = CTdonhang.dongia
-    CTdonhang.delete()
-    return remove
-
-def cofirm_donhang(request_data):
+def remove_giay(request_data,idchitiet):
     iddonhang = request_data['iddonhang']
     if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
         return Response(
             {'error': 'Order not exist'}, 
             status= status.HTTP_404_NOT_FOUND
+        )            
+    CTdonhang = Chitietdonhang.objects.get(idchitiet= idchitiet)
+    money = CTdonhang.dongia
+    CTdonhang.delete()
+    return money
+
+def cofirm_donhang(request_data, tenkhachhang,diachi,email,sdt):
+    iddonhang = request_data['iddonhang']
+    idkhachhang = request_data['idkhachhang']
+    if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
+        return Response(
+            {'error': 'Order not exist'}, 
+            status= status.HTTP_404_NOT_FOUND
         )
-    else:
+    elif idkhachhang != 10000:
         donhang = Donhang.objects.get(iddonhang = iddonhang)
+        donhang.trangthai = 'Confirm'
+        donhang.save()
+        return Response(DonHangSerializer(donhang).data, status=status.HTTP_202_ACCEPTED)
+    else:
+        while True:
+            idkh = id_generator(size=5)
+            if (Khachhang.objects.filter(idkhachhang = idkh).count() == 0):
+                break
+        khachhang = Khachhang(idkhachhang = idkh, tenkhachhang=tenkhachhang, diachi=diachi, email=email, sdt=sdt)
+        khachhang.save()
+
+        donhang = Donhang.objects.get(iddonhang = iddonhang)
+        donhang.idkhachhang = Khachhang(idkhachhang=idkh)
         donhang.trangthai = 'Confirm'
         donhang.save()
         return Response(DonHangSerializer(donhang).data, status=status.HTTP_202_ACCEPTED)
@@ -70,28 +94,29 @@ def cofirm_donhang(request_data):
 class ManageGioHang(APIView):
     serializer_class = DonHangSerializer
 
+    permission_classes = (permissions.AllowAny, )
+
     # Tao lan dau tien
     def post(self, request):
-        try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                while True:
-                    iddonhang = id_generator(size=10)
-                    if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
-                        break
-                idkhachhang = serializer.data.get('idkhachhang')
-                idkhachhang = Khachhang.objects.get(idkhachhang=idkhachhang)
-                createday = datetime.date.today()
-                trangthai = 'Checking'
-                donhangtm = Donhang(iddonhang = iddonhang, idkhachhang = idkhachhang, createday = createday, trangthai = trangthai,
-                                    confirmby = NULL, dvvanchuyen = NULL,tennv_vanchuyen = NULL,sdt = NULL, socccd = NULL, thoigiannhan = NULL)
-                donhangtm.save()
-                return Response(DonHangSerializer(donhangtm).data, status=status.HTTP_201_CREATED)
+        try:
+            user = request.user
+            if user.is_anonymous:
+                idkhachhang = 10000
             else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+                user_id = user.data['id']
+                khachhang = Khachhang.objects.get(id=user_id)
+                idkhachhang = khachhang.idkhachhang
+            while True:
+                iddonhang = id_generator(size=5)
+                if (Donhang.objects.filter(iddonhang = iddonhang).count() == 0):
+                    break
+            sotienthanhtoan = 0
+            createday = datetime.date.today()
+            trangthai = 'Checking'
+            donhangtm = Donhang(iddonhang = iddonhang, idkhachhang = Khachhang(idkhachhang=idkhachhang), sotienthanhtoan=sotienthanhtoan,
+                                createday = createday, trangthai = trangthai)
+            donhangtm.save()
+            return Response(DonHangSerializer(donhangtm).data, status=status.HTTP_201_CREATED)    
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -106,154 +131,59 @@ class ManageGioHang(APIView):
             data = request.data
             iddonhang = data['iddonhang']
             donhang = Donhang.objects.get(iddonhang=iddonhang)
-            nguoimua = donhang.idkhachhang
-            money = donhang.sotienthanhtoan
-            donhang_seria = self.serializer_class(donhang)
+            donhang_seria = DonHangSerializer(donhang)
+            money = donhang_seria.data.get('sotienthanhtoan')
 
-            if donhang_seria.is_valid():
-                danhsachgiay = Chitietdonhang.objects.filter(iddonhang = donhang.iddonhang)
-                for group in danhsachgiay.data:
-                    giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
-                    mausac = giay.mausac
-                    kichthuoc = giay.kichco
+            khachhang = Khachhang.objects.get(idkhachhang = donhang_seria.data.get('idkhachhang'))
+            nguoimua = khachhang.tenkhachhang
 
-                    danhmucgiay = Danhmucgiay.objects.get(iddanhmuc = giay.iddanhmuc)
-                    danhmucgiay_seria = DanhMucGiaySerializer(danhmucgiay)
-                        
-                    CTdonhang = Chitietdonhang.objects.get(iddonhang=giay.iddanhmuc, idgiay = group.get('idgiay'))
-                    soluong = CTdonhang.soluong
+            danhsachgiay = Chitietdonhang.objects.filter(iddonhang = donhang.iddonhang)
+            danhsachgiay_seria = ChitietDHSerializer(danhsachgiay, many = True)
+            for group in danhsachgiay_seria.data:
+                giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
+                giay_seria = ChitietGiaySerializer(giay)
+                iddanhmuc = giay_seria.data.get('iddanhmuc')
+                mausac = giay_seria.data.get('mausac')
+                kichco = giay_seria.data.get('kichco')
 
-                    list_giay.append(
-                        {
-                            'Mau giay' : danhmucgiay_seria,
-                            'Thong tin chi tiet' : {mausac,kichthuoc},
-                            'So luong' : soluong
-                        }
-                    )
-                return Response(
+                danhmucgiay = Danhmucgiay.objects.get(iddanhmuc = iddanhmuc)
+                tendanhmuc = danhmucgiay.tendanhmuc
+                loaigiay = danhmucgiay.loaigiay
+                hangsanxuat = danhmucgiay.hangsanxuat
+                giatien = danhmucgiay.giatien
+                doituong = danhmucgiay.doituong
+
+                soluong = group.get('soluong')
+
+                list_giay.append(
                     {
-                        'Thong tin don hang' : { nguoimua, money},
-                        'Danh sach don hang khach hien tai': list_giay
-                    }, 
-                    status=status.HTTP_200_OK
+                        'Mau giay' : 
+                        {
+                            "Ten" : tendanhmuc,
+                            "Loai giay" : loaigiay,
+                            "Hang san xuat" : hangsanxuat,
+                            "Gia tien" : giatien,
+                            "Doi tuong su dung" : doituong
+                        },
+                        'Thong tin chi tiet' : {
+                            'Mau sac' : mausac,
+                            'Kich co' : kichco,
+                            'So luong' : soluong
+                        },
+                    }
                 )
-            else :
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
-        except Exception as e:
-            traceback.print_exc()
             return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    'Thong tin don hang' : 
+                        {
+                            'Ten chu hang': nguoimua, 
+                            'So tien thanh toan' : money
+                        }
+                    ,
+                    'Danh sach mat hang cua quy khach hien tai': list_giay
+                }
+                ,status=status.HTTP_200_OK
             )
-
-    def put(self, request, action):
-        try:
-            data = request.data
-            serializer = self.serializer_class(data)
-            iddonhang = data['iddonhang']
-            donhang = Donhang.objects.get(iddonhang = iddonhang)
-            if serializer.is_valid():
-                if action == 0:
-                    money = add_giay(serializer.data)
-                    donhang.sotienthanhtoan += money
-                    donhang.save()
-                elif action == 1:
-                    remove_giay(serializer.data)
-                    donhang.sotienthanhtoan -= money
-                    donhang.save()
-                elif action == 2:
-                    cofirm_donhang(serializer.data)
-                return Response(
-                    {'Update success'}, 
-                    status= status.HTTP_202_ACCEPTED
-                )
-            else :
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )          
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def delete(self, request):
-        try:
-            data=request.data
-            serializer = self.serializer_class(data)
-            if serializer.is_valid():
-                iddonhang = data['iddonhang']
-                list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
-                for group in list_giay.data:
-                    giay = Chitietgiay.objects.get(iddonhang = group.get('iddonhang'))
-                    giay.delete()
-                donhang = Donhang.objects.get(iddonhang = iddonhang)
-                donhang.delete()
-                return Response(
-                    {'error': 'Delete successful'}, 
-                    status= status.HTTP_204_NO_CONTENT
-                )
-            else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-#Cac class tim kiem cho client va server
-class GiayFilter(django_filters.FilterSet):
-    tendanhmuc = django_filters.CharFilter(field_name= 'tendanhmuc', label= 'Search',ookup_expr='iexact')
-
-
-class GiayList(generics.ListAPIView):
-    queryset = Danhmucgiay.objects.all()
-    serializer_class = DanhMucGiaySerializer
-    filter_backends = [filters.DjangoFilterBackend]
-    filter_class = GiayFilter
-
-
-def get_listgiay(request):
-    giay_filter = GiayFilter(request.GET, queryset = Danhmucgiay.objects.all())
-    context = {
-        'form' : giay_filter.form,
-        'giay' : giay_filter.qs
-    }
-    return render(request, '', context)
-
-
-#Class kiem soat review khach hang
-class ReviewManager(APIView):
-
-    serializer_class = Reviewsanpham
-
-    def post(self, request):
-        try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                idkhachhang = request.data['idkhachhang']
-                idgiay = request.data['idgiay']
-                comment = request.date['comment']
-                createday = datetime.date.today()
-
-                review = Reviewsanpham(idkhachhang=idkhachhang, idgiay=idgiay,comment=comment, createday=createday)
-                review.save()
-                return Response(ReviewSPSerializer(review).data, status=status.HTTP_201_CREATED)
-            else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -262,17 +192,39 @@ class ReviewManager(APIView):
             )
 
     def put(self, request):
-        try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                serializer.comment = request.data['comment']
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+        try:
+            user = request.user
+            data = request.data
+            iddonhang = data['iddonhang']
+            action = data['action']
+            donhang = Donhang.objects.get(iddonhang = iddonhang)
+            serializer = DonHangSerializer(donhang)
+            if action == 0:
+                iddanhmuc = data['iddanhmuc']
+                mausac = data['mausac']
+                kichco = data['kichco']
+                soluong = data['soluong']
+                money = add_giay(serializer.data,iddanhmuc,soluong,mausac,kichco)
+                donhang.sotienthanhtoan += money
+                donhang.save()
+            elif action == 1:
+                idchitiet = data['idchitiet']
+                money = remove_giay(serializer.data,idchitiet)
+                donhang.sotienthanhtoan -= money
+                donhang.save()
+            elif action == 2:
+                if donhang.idkhachhang != 10000:
+                    cofirm_donhang(serializer.data,tenkhachhang,diachi,email,sdt)
+                else:
+                    tenkhachhang = data['tenkhachhang']
+                    diachi = data['diachi']
+                    email = data['email']
+                    sdt = data['sdt']
+                    cofirm_donhang(serializer.data,tenkhachhang,diachi,email,sdt)
+            return Response(
+                    {'Update success'}, 
+                    status= status.HTTP_202_ACCEPTED
+            )
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -282,23 +234,28 @@ class ReviewManager(APIView):
 
     def delete(self, request):
         try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                idtaikhoan = request.data['idtaikhoan']
-                idgiay = request.date['idgiay']
-                list_review = Reviewsanpham.objects.filter(idtaikhoan = idtaikhoan, idgiay = idgiay)
-                for group in list_review.data:
-                    review = Reviewsanpham.objects.get(idtaikhoan = group.get('idtaikhoan'), idgiay = group.get('idgiay'))
-                    review.delete()
-                return Response(
-                    {'error': 'Delete successful'}, 
-                    status= status.HTTP_204_NO_CONTENT
+            data=request.data
+            iddonhang = data['iddonhang']
+            if Donhang.objects.filter(iddonhang = iddonhang).count() == 0:
+                return JsonResponse(
+                    {'error': 'No matching'}
+                    ,safe=False 
+                    ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+                list_giay = Chitietdonhang.objects.filter(iddonhang = iddonhang)
+                if list_giay.count() != 0:
+                    list_giay_seria = ChitietDHSerializer(list_giay, many = True)
+                    for group in list_giay_seria.data:
+                        giay = Chitietdonhang.objects.get(idchitiet = group.get('idchitiet'))
+                        giay.delete()
+                donhang = Donhang.objects.get(iddonhang = iddonhang)
+                donhang.delete()
+                return JsonResponse(
+                    {'Result': 'Delete successful'}
+                    ,safe=False 
+                    ,status= status.HTTP_202_ACCEPTED
+                )        
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -307,38 +264,305 @@ class ReviewManager(APIView):
             )
 
 
-#Lay lich su mua hang cua khach cho server and client
-class KhachHangAccountActivities(APIView):
-    def get(self, request):
-        try: 
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                list_muaban = []
+#Class kiem soat review khach hang
+class ManageReview(APIView):
 
-                idtaikhoan = request.data['idtaikhoan']
-                taikhoan = TaikhoanKhachhang.objects.get(idtaikhoan=idtaikhoan)
-                khachhang = taikhoan.idkhachhang
-                danhsachdon = Donhang.objects.filter(idkhachhang = khachhang)
-                for group in danhsachdon.data:
-                    donhang = Donhang.objects.get(iddonhang = group.get('iddonhang'))
-                    money = donhang.sotienthanhtoan
-                    ngaythuchien = donhang.createday
-                    list_muaban.append(
-                        {
-                            'Thanh toan' : money,
-                            'Ngay thuc hien' : ngaythuchien
-                        }
-                    )
-                return Response({'Lich su mua ban': list_muaban}, status= status.HTTP_204_NO_CONTENT
+    serializer_class = ReviewSPSerializer
+
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request):
+        try:
+            user = request.user
+            user_id = user.data['id']
+            if user.is_manager:
+                return Response(
+                    {'error': 'Manage does not have permission to do this' }
+                    , status=status.HTTP_403_FORBIDDEN
                 )
-            else:
-                return  Response(
-                    {'error': 'Something went wrong'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+
+            data = request.data
+            while True:
+                review = id_generator(size=5)
+                if (Reviewsanpham.objects.filter(idreview = review).count() == 0):
+                    break
+            iddanhmuc = data['iddanhmuc']
+            comment = data['comment']
+            createday = datetime.date.today()
+            review = Reviewsanpham(idreview=review, id = UserAccount(id=user_id), idloaigiay= Danhmucgiay(iddanhmuc=iddanhmuc)
+                                   ,comment=comment, createday=createday)
+            review.save()
+            return Response(
+                    ReviewSPSerializer(review).data
+                    ,status=status.HTTP_201_CREATED
+            )         
         except Exception as e:
             traceback.print_exc()
             return Response(
                 {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get(self, request):
+        try:
+            list_review = []
+            user = request.user
+            user_id = user.data['id']
+            review = Reviewsanpham.objects.filter(id = user_id)
+            serializer = self.serializer_class(review, many=True)
+            for group in serializer.data:
+                one = Reviewsanpham.objects.get(idreview = group.get('idreview'))
+                danhmuc = Danhmucgiay.objects.get(iddanhmuc = group.get('idloaigiay'))
+                
+                tendanhmuc = danhmuc.tendanhmuc
+                comment = one.comment
+                createday = one.createday
+
+                list_review.append(
+                    {
+                        'San pham' : tendanhmuc,
+                        'Noi dung' : comment,
+                        'Ngay viet' : createday
+                    }
+                )
+            return JsonResponse(
+                {list_review}
+                , safe= False
+                , status = status.HTTP_200_OK
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request):
+        try:
+            data = request.data
+            idreview = data['idreview']
+            comment = data['comment']
+            review = Reviewsanpham.objects.get(idreview = idreview)
+            review.comment = comment
+            review.save()
+            return Response(
+                {'Update success' : ReviewSPSerializer(review).data}
+                ,status=status.HTTP_202_ACCEPTED
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request):
+        try:
+            data = request.data
+            idreview = data['idreview']
+            review = Reviewsanpham.objects.get(idreview = idreview)
+            review.delete()
+            return Response(
+                    {'Result': 'Delete successful'}, 
+                    status= status.HTTP_202_ACCEPTED
+                )   
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+#Tra ve thong tin chi tiet ve giay cho khach hang
+class GetDetailsGiay(APIView):
+    serializer_class = ChitietGiaySerializer
+
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self, request):
+        colour_list = []
+        size_list = []
+
+        try:
+            data = request.data
+            iddanhmuc = data['iddanhmuc']
+            list_giay = Chitietgiay.objects.filter(iddanhmuc = iddanhmuc)
+            list_giay_seria = self.serializer_class(list_giay, many = True)
+            for group in list_giay_seria.data:
+                giay = Chitietgiay.objects.get(idgiay = group.get('idgiay'))
+                #Neu het hang , bo qua mau giay nay
+                if giay.sotonkho == 0:
+                    continue
+                else:
+                    colour = giay.mausac
+                    size = giay.kichco
+                    if not size_list.__contains__(size):
+                        size_list.append(size)
+                    if not colour_list.__contains__(colour):
+                        colour_list.append(colour)
+            danhmuc = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+            serializer = DanhMucGiaySerializer(danhmuc)
+            tendanhmuc = serializer.data.get('tendanhmuc')
+            loaigiay = serializer.data.get('loaigiay')
+            hangsanxuat = serializer.data.get('hangsanxuat')
+            giatien = serializer.data.get('giatien')
+            doituong = serializer.data.get('doituong')
+            return JsonResponse(
+                {
+                    'Thong tin giay' : 
+                    {
+                        'tendanhmuc' : tendanhmuc,
+                        'loaigiay' : loaigiay,
+                        'hangsanxuat' : hangsanxuat,
+                        'giatien' : giatien,
+                        'doituong' : doituong
+                    },
+                    'List mau sac co': colour_list,
+                    'List kich thuoc co' : size_list
+                }, safe= False
+                , status=status.HTTP_200_OK
+            )          
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class GetReviewGiay(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self, request):
+        try:
+            list_review = []
+            data = request.data
+            iddanhmuc = data['iddanhmuc']
+            review = Reviewsanpham.objects.filter(idloaigiay=iddanhmuc)
+            serializer = ReviewSPSerializer(review, many=True)
+            for group in serializer.data:
+                one = Reviewsanpham.objects.get(idreview = group.get('idreview'))
+                host = UserAccount.objects.get(id = group.get('id'))
+                
+                tenkhach = host.accountname
+                comment = one.comment
+
+                list_review.append(
+                    {
+                        'Nguoi viet' : tenkhach,
+                        'Noi dung' : comment
+                    }
+                )
+            thongtin = Danhmucgiay.objects.get(iddanhmuc=iddanhmuc)
+            name = thongtin.tendanhmuc
+            return JsonResponse(
+                {
+                    'San pham' : name,
+                    'Cac review san pham' : list_review
+                }
+                , safe= False
+                , status = status.HTTP_200_OK
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# #Lay lich su mua hang cua khach cho server and client
+class HistoryActivities(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self, request):
+        try: 
+            list_muaban = []
+            user = request.user
+            if user.is_anonymous:
+                return Response(
+                {'error': 'User have not account'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
+
+            user_id = user.data['id']
+            khachhang = Khachhang.objects.get(id=user_id)
+            danhsachdon = Donhang.objects.filter(idkhachhang = khachhang.idkhachhang)
+            danhsachdon = Donhang.objects.filter(idkhachhang = khachhang)
+            danhsachdon_seria = DonHangSerializer(danhsachdon, many= True)
+            for group in danhsachdon_seria.data:
+                donhang = Donhang.objects.get(iddonhang = group.get('iddonhang'))
+                money = donhang.sotienthanhtoan
+                ngaythuchien = donhang.createday
+                trangthai = donhang.trangthai
+                list_muaban.append(
+                    {
+                            'Thanh toan' : money,
+                            'Ngay thuc hien' : ngaythuchien,
+                            'Tinh trang' : trangthai
+                    }
+                )
+            return Response(
+                {'Lich su mua ban': list_muaban}
+                , status= status.HTTP_200_OK
+            )   
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+
+class ShowDetailsAccount(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    def get(self, request):
+        try:
+            user = request.user
+            if user.is_anonymous:
+                return Response(
+                {'error': 'User have not account'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
+
+            user_id = user.data['id']
+            taikhoan = UserAccount.objects.get(id=user_id)
+            thongtin = Khachhang.objects.get(id=user_id)
+
+            name = thongtin.tenkhachhang
+            address = thongtin.diachi
+            email = thongtin.email
+            phonenumber = thongtin.sdt
+            diemtichluy = thongtin.diemtichluy
+
+            sex =  taikhoan.gioitinh
+            brithday = taikhoan.ngaysinh
+            createday = taikhoan.date_joined
+            return Response(
+                {
+                    'Thong tin khach hang' : {
+                        'Ten day du': name,
+                        'Dia chi' : address,
+                        'Email ' : email,
+                        'So dien thoai' : phonenumber,
+                        'Gioi tinh' : sex,
+                        'Ngay sinh' : brithday,
+                    },
+                    'Tai khoan' : {
+                        'Diem tich luy' : diemtichluy,
+                        'Ngay lap' : createday}
+                }
+                , status=status.HTTP_200_OK
+            )
+            
+        except:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
