@@ -3,37 +3,51 @@ import Navigationbar from "../Navigationbar/Navbar";
 import Productions from "../Productions/Products";
 import Footer from "../Footer/Footer";
 import Newsletter from "../Newsletter/Newsletter";
+import f1 from "../img/products/Nike-air-force-107-LB.webp";
+import { useState } from "react";
+
+function handleDelete(){
+  return null;
+}
+
+function handleEdit(){
+  return null;
+}
+
+
 
 function Cart() {
+
+
   return (
     <>
       <Navigationbar />
       <section id="cart" className="section-p1">
         <table id="table" width="100%">
-          <thead>
-            <tr>
-              <td>Remove</td>
-              <td>Image</td>
-              <td>Sản phẩm</td>
-              <td>Giá cả</td>
-              <td>Số lượng</td>
-              <td>Tổng giá tiền</td>
-            </tr>
-          </thead>
+            <thead>
+              <tr>
+                <td>Remove</td>
+                <td>Image</td>
+                <td>Sản phẩm</td>
+                <td>Giá cả</td>
+                <td>Số lượng</td>
+                <td>Tổng giá tiền</td>
+              </tr>
+            </thead>
           <tbody>
             <tr>
               <td>
-                <a href="#">
+                <button type="button" onClick={handleDelete}>
                   <i className="far fa-times-circle"></i>
-                </a>
+                </button>
               </td>
               <td>
-                <img src="img/products/f1.jpg" alt="" />
+                <img src={f1} alt="" />
               </td>
               <td>Giày nike</td>
               <td>100$</td>
               <td>
-                <input type="number" value="1" />
+                <input type="number" defaultValue="1" onChange={handleEdit}/>
               </td>
               <td>$100$</td>
             </tr>
@@ -44,12 +58,12 @@ function Cart() {
                 </a>
               </td>
               <td>
-                <img src="img/products/f1.jpg" alt="" />
+                <img src={f1} alt="" />
               </td>
               <td>Giày nike</td>
               <td>100$</td>
               <td>
-                <input type="number" value="1" />
+                <input type="number" defaultValue="1" onChange={handleEdit} />
               </td>
               <td>$100$</td>
             </tr>
@@ -60,12 +74,12 @@ function Cart() {
                 </a>
               </td>
               <td>
-                <img src="img/products/f1.jpg" alt="" />
+                <img src={f1} alt="" />
               </td>
               <td>Giày nike</td>
               <td>100$</td>
               <td>
-                <input type="number" value="1" />
+                <input type="number" defaultValue="1" />
               </td>
               <td>$100$</td>
             </tr>
@@ -75,7 +89,7 @@ function Cart() {
 
       <section id="cart-add" className="section-p1">
         <div id="coupon">
-          <h3>Aplly Coupon</h3>
+          <h3>Apply Coupon</h3>
           <div>
             <input type="text" placeholder="Nhập mã quà tặng" />
             <button className="normal">Apply</button>
@@ -84,14 +98,16 @@ function Cart() {
         <div id="subtotal">
           <h3>Hóa đơn</h3>
           <table>
-            <tr>
-              <td>Số tiền</td>
-              <td>300$</td>
-            </tr>
-            <tr>
-              <td>Tiền ship</td>
-              <td>Miễn Phí</td>
-            </tr>
+            <tbody>
+              <tr>
+                <th>Số tiền</th>
+                <td>300$</td>
+              </tr>
+              <tr>
+                <th>Tiền ship</th>
+                <td>Miễn Phí</td>
+              </tr>
+            </tbody>
           </table>
           <button id="thanhtoan" className="normal">
             Thanh toán

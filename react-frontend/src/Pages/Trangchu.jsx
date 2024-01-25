@@ -5,7 +5,12 @@ import Footer from "../Footer/Footer";
 import Newsletter from "../Newsletter/Newsletter";
 import Recommmened from "../Recommended/Recommmened";
 import Sidebar from "../Sidebar/Sidebar";
-
+import logof1 from "../img/features/f1.png";
+import logof2 from "../img/features/f2.png";
+import logof3 from "../img/features/f3.png";
+import logof4 from "../img/features/f4.png";
+import logof5 from "../img/features/f5.png";
+import logof6 from "../img/features/f6.png";
 function trangChu() {
   return (
     <>
@@ -20,27 +25,27 @@ function trangChu() {
 
       <section id="feature" className="section-p1">
         <div className="fe-box">
-          <img src="img/features/f1.png" />
+          <img src={logof1} />
           <h6>Super fast</h6>
         </div>
         <div className="fe-box">
-          <img src="img/features/f2.png" />
+          <img src={logof2} />
           <h6>Online order</h6>
         </div>
         <div className="fe-box">
-          <img src="img/features/f3.png" />
+          <img src={logof3} />
           <h6>Save money</h6>
         </div>
         <div className="fe-box">
-          <img src="img/features/f4.png" />
+          <img src={logof4} />
           <h6>Promotions</h6>
         </div>
         <div className="fe-box">
-          <img src="img/features/f5.png" />
+          <img src={logof5} />
           <h6>Happy Sell</h6>
         </div>
         <div className="fe-box">
-          <img src="img/features/f6.png" />
+          <img src={logof6} />
           <h6>Always support</h6>
         </div>
       </section>

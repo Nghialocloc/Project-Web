@@ -18,7 +18,8 @@ import SignUp from "./Pages/SignUp";
 function App() {
   // const [count, setCount] = useState(0)
 
-  return (<>
+  return (
+    <>
       {/* <Trangchu /> */}
       {/* <Cart /> */}
       {/* <Shopping /> */}
@@ -28,17 +29,25 @@ function App() {
       {/* <Details /> */}
       {/* <Dashboard /> */}
 
-       <Router>
+      <Router>
         <Fragment>
           <Routes>
-            <Route path="" element={<Details />} />
+            <Route path="" element={<Trangchu />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={<Dashboard />}></Route>
+            <Route path="/trangchu" element={<Trangchu />} />
+            <Route path="/shoping" element={<Shopping />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/detail" element={<Details />} />
           </Routes>
         </Fragment>
-       </Router>
-      </>
+      </Router>
+    </>
   );
 }
 
-export default App
+export default App;

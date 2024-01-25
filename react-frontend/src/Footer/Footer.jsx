@@ -1,10 +1,10 @@
 import "./Footer.css";
-
+import logo from "../img/logo.png";
 function Footer() {
   return (
     <footer className="section-p1">
       <div className="col">
-        <img src="img/logo.png" alt="" />
+        <img src={logo} alt="" />
         <h4>Contact</h4>
         <p>
           <strong>Address:</strong> Ha Noi Viet Nam
@@ -40,7 +40,7 @@ function Footer() {
       </div>
       <div className="coppyright">
         <p>
-          <a href="trangchu.html">Mike Shoes Store</a> - All rights reserved ©
+          <a href="trangchu.jsx">Mike Shoes Store</a> - All rights reserved ©
           2023 - Designed by
           <span id="footer-G"> group 4th</span>
         </p>

@@ -3,17 +3,18 @@ import Navigationbar from "../Navigationbar/Navbar";
 import Productions from "../Productions/Products";
 import Footer from "../Footer/Footer";
 import Newsletter from "../Newsletter/Newsletter";
+import abouta6 from "../img/about/a6.jpg";
 
 function About() {
   return (
     <>
       <Navigationbar />
-      <section id="page-header">
+      <section id="page-header" class="about-header">
         <h2>#Về chúng tôi</h2>
         <p>Hiểu rõ hơn về cửa tiệm</p>
       </section>
       <section id="about-head" className="section-p1">
-        <img src="img/about/a6.jpg" alt="" />
+        <img src={abouta6} alt="" />
         <div>
           <h2>Chúng tôi là ai?</h2>
           <p>Giới thiệu cửa hàng....</p>

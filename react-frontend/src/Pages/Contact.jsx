@@ -3,6 +3,9 @@ import Navigationbar from "../Navigationbar/Navbar";
 import Productions from "../Productions/Products";
 import Footer from "../Footer/Footer";
 import Newsletter from "../Newsletter/Newsletter";
+import p1 from "../img/people/1.png";
+import p2 from "../img/people/2.png";
+import p3 from "../img/people/3.png";
 
 function Contact() {
   return (
@@ -54,7 +57,7 @@ function Contact() {
         </form>
         <div className="people">
           <div>
-            <img src="img/people/1.png" alt="" />
+            <img src={p1} alt="" />
             <p>
               <span>Minh Nghĩa</span>
               Chuyên viên tư vấn khách hàng
@@ -65,7 +68,7 @@ function Contact() {
             </p>
           </div>
           <div>
-            <img src="img/people/2.png" alt="" />
+            <img src={p2} alt="" />
             <p>
               <span>Đức Phúc</span> Đối tác quảng cáo
               <br></br>
@@ -75,7 +78,7 @@ function Contact() {
             </p>
           </div>
           <div>
-            <img src="img/people/3.png" alt="" />
+            <img src={p3} alt="" />
             <p>
               <span>Minh Đức</span> Quản lý
               <br></br>
