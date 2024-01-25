@@ -1,10 +1,10 @@
 import "./Footer.css";
-
+import logo from "../img/logo.png";
 function Footer() {
   return (
     <footer className="section-p1">
       <div className="col">
-        <img src="img/logo.png" alt="" />
+        <img src={logo} alt="" />
         <h4>Contact</h4>
         <p>
           <strong>Address:</strong> Ha Noi Viet Nam

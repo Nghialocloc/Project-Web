@@ -1,4 +1,5 @@
 import "./Navbar.css";
+import logo from "../img/logo.png";
 
 const active = () => {
   return "active";
@@ -24,10 +25,12 @@ function navBar() {
         rel="stylesheet"
         href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
       />
-  
+
       <section id="header">
-        <a href="#">
-          <img src="#" className="logo" />
+        <a href="trangchu">
+          <div className="logo">
+            <img src={logo} />
+          </div>
         </a>
         <div className="nav-container">
           <li>
@@ -41,9 +44,7 @@ function navBar() {
         <div>
           <ul id="navbar">
             <li>
-              <a href="trangchu">
-                Home
-              </a>
+              <a href="trangchu">Home</a>
             </li>
             <li>
               <a href="shoping">Shopping</a>

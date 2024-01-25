@@ -1,9 +1,10 @@
 import "./style.css";
+import "../Productions/Products.css";
 import Navigationbar from "../Navigationbar/Navbar";
 import Productions from "../Productions/Products";
 import Footer from "../Footer/Footer";
 import Newsletter from "../Newsletter/Newsletter";
-
+import data from "../db/data";
 function Shopping() {
   return (
     <>
@@ -12,7 +13,39 @@ function Shopping() {
         <h2>super value deals</h2>
         <p>Save more with coupons &up to 70% off!</p>
       </section>
-      <Productions />
+      <section id="product1" className="section-p1">
+        <div className="pro-container">
+          {data.map((data, index) => {
+            return (
+              <div className="pro">
+                <div key={index}>
+                  <a href="detail">
+                    <div className="padding-img">
+                      <img src={data.img}></img>
+                    </div>
+                    <div className="des">
+                      <span>{data.company}</span>
+                      <h5>{data.title}</h5>
+                      <div className="star">
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                      </div>
+                      <h4>{data.price}</h4>
+                    </div>
+
+                    <a href="cart">
+                      <i className="fa fa-shopping-cart cart"></i>
+                    </a>
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
       <section id="pagination">
         <a href="#">1</a>
         <a href="#">2</a>

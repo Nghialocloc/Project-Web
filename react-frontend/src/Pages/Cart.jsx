@@ -3,6 +3,7 @@ import Navigationbar from "../Navigationbar/Navbar";
 import Productions from "../Productions/Products";
 import Footer from "../Footer/Footer";
 import Newsletter from "../Newsletter/Newsletter";
+import f1 from "../img/products/f1.jpg";
 
 function Cart() {
   return (
@@ -28,7 +29,7 @@ function Cart() {
                 </a>
               </td>
               <td>
-                <img src="img/products/f1.jpg" alt="" />
+                <img src={f1} alt="" />
               </td>
               <td>Giày nike</td>
               <td>100$</td>
@@ -44,7 +45,7 @@ function Cart() {
                 </a>
               </td>
               <td>
-                <img src="img/products/f1.jpg" alt="" />
+                <img src={f1} alt="" />
               </td>
               <td>Giày nike</td>
               <td>100$</td>
@@ -60,7 +61,7 @@ function Cart() {
                 </a>
               </td>
               <td>
-                <img src="img/products/f1.jpg" alt="" />
+                <img src={f1} alt="" />
               </td>
               <td>Giày nike</td>
               <td>100$</td>
