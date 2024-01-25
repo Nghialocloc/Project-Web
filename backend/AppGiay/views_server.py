@@ -31,7 +31,7 @@ def insert_khachhang(requested_data,Email,accountName,user):
         khachhang = id_generator(size=5)
         if (Khachhang.objects.filter(idkhachhang=khachhang).count() == 0):
             break
-    tenkhachhang = accountName
+    tenkhachhang = requested_data['tenkhachhang']
     email = Email
     diachi = requested_data['diachi']
     sdt = requested_data['sdt']
@@ -49,7 +49,7 @@ def insert_nhanvien(requested_data,Email,accountName,user):
         nhanvien = id_generator(size=5)
         if (Nhanvien.objects.filter(idnhanvien=nhanvien).count() == 0):
             break
-    tennhanvien = accountName
+    tennhanvien = requested_data['tennhanvien']
     email = Email
     tenchucvu = requested_data['tenchucvu']
     diachi = requested_data['diachi']
@@ -148,9 +148,11 @@ class ManageAccount(APIView):
                 return Response({'error': 'User does not have necessary permission' }, status=status.HTTP_403_FORBIDDEN)
             else:
                 number = request.data['id']
+                accountname = request.data['accountname']
                 gioitinh = request.data['gioitinh']
                 ngaysinh = request.data['ngaysinh']
                 account = UserAccount.objects.get(id=number)
+                account.accountname = accountname
                 account.gioitinh = gioitinh
                 account.ngaysinh = ngaysinh
                 account.save()
@@ -522,11 +524,11 @@ class ManageOrder(APIView):
             iddonhang = data['iddonhang']
             action = data['action']
             if action == 0:
-                confirmby = data['iddonhang']
-                dvvanchuyen = data['iddonhang']
-                tennv_vanchuyen = data['iddonhang']
-                sdt = data['iddonhang']
-                socccd = data['iddonhang']
+                confirmby = data['confirmby']
+                dvvanchuyen = data['dvvanchuyen']
+                tennv_vanchuyen = data['tennv_vanchuyen']
+                sdt = data['sdt']
+                socccd = data['socccd']
                 thoigiannhan = datetime.datetime.now()
 
                 donhang = Donhang.objects.get(iddonhang = iddonhang) 

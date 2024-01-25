@@ -213,11 +213,14 @@ class ManageGioHang(APIView):
                 donhang.sotienthanhtoan -= money
                 donhang.save()
             elif action == 2:
-                tenkhachhang = data['tenkhachhang']
-                diachi = data['diachi']
-                email = data['email']
-                sdt = data['sdt']
-                cofirm_donhang(serializer.data,tenkhachhang,diachi,email,sdt)
+                if donhang.idkhachhang != 10000:
+                    cofirm_donhang(serializer.data,tenkhachhang,diachi,email,sdt)
+                else:
+                    tenkhachhang = data['tenkhachhang']
+                    diachi = data['diachi']
+                    email = data['email']
+                    sdt = data['sdt']
+                    cofirm_donhang(serializer.data,tenkhachhang,diachi,email,sdt)
             return Response(
                     {'Update success'}, 
                     status= status.HTTP_202_ACCEPTED
@@ -479,6 +482,11 @@ class HistoryActivities(APIView):
         try: 
             list_muaban = []
             user = request.user
+            if user.is_anonymous:
+                return Response(
+                {'error': 'User have not account'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
 
             user_id = user.data['id']
             khachhang = Khachhang.objects.get(id=user_id)
@@ -516,6 +524,11 @@ class ShowDetailsAccount(APIView):
     def get(self, request):
         try:
             user = request.user
+            if user.is_anonymous:
+                return Response(
+                {'error': 'User have not account'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
 
             user_id = user.data['id']
             taikhoan = UserAccount.objects.get(id=user_id)
