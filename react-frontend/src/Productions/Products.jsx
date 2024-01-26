@@ -1,4 +1,5 @@
 import "./Products.css";
+import data from "../db/data";
 function Products() {
   return (
     <>
@@ -14,7 +15,38 @@ function Products() {
         <h2>Featured Products</h2>
         <p>Winter Collection New Model</p>
         <div className="pro-container">
-          <div className="pro">
+          {data.map((data, index) => {
+            if (data.feature == true) {
+              return (
+                <div className="pro" key={index}>
+                  {/* <data feature={true} /> */}
+                  <a href={"detail"}>
+                    <div className="padding-img">
+                      <img src={data.img}></img>
+                    </div>
+                    <div className="des">
+                      <span>{data.company}</span>
+                      <h5>{data.title}</h5>
+                      <div className="star">
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                      </div>
+                      <h4>{data.price}</h4>
+                    </div>
+                    <button href="cart">
+                      <i className="fa fa-shopping-cart cart"></i>
+                    </button>
+                  </a>
+                </div>
+              );
+            }
+          })}
+        </div>
+      </section>
+      {/* <div className="pro">
             <img src="img/products/f1.jpg" />
             <div className="des">
               <span>adidas</span>
@@ -195,7 +227,7 @@ function Products() {
             </a>
           </div>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }
