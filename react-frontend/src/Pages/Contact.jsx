@@ -12,8 +12,8 @@ function Contact() {
     <>
       <Navigationbar />
       <section id="page-header" className="about-header">
-        <h2>#Về chúng tôi</h2>
-        <p>Hiểu rõ hơn về cửa tiệm</p>
+        <h2>#Liên hệ</h2>
+        <p>Luôn luôn sẵn sàng</p>
       </section>
       <section id="contact-details">
         <div className="details">

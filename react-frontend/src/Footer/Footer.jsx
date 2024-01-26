@@ -26,10 +26,10 @@ function Footer() {
       </div>
       <div className="col">
         <h4>About</h4>
-        <a href="#">Về chúng tôi</a>
-        <a href="#">Chính sách</a>
-        <a href="#">Liên hệ</a>
-        <a href="#">Hỗ trợ khách hàng</a>
+        <a href="about">Về chúng tôi</a>
+        <a href="chinhsach">Chính sách</a>
+        <a href="contact">Liên hệ</a>
+        <a href="contact">Hỗ trợ khách hàng</a>
       </div>
       <div className="col">
         <h4>My Account</h4>

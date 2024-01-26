@@ -13,12 +13,12 @@ function Cart() {
         <table id="table" width="100%">
           <thead>
             <tr>
-              <td>Remove</td>
-              <td>Image</td>
-              <td>Sản phẩm</td>
-              <td>Giá cả</td>
-              <td>Số lượng</td>
-              <td>Tổng giá tiền</td>
+              <th>Remove</th>
+              <th>Image</th>
+              <th>Sản phẩm</th>
+              <th>Giá cả</th>
+              <th>Số lượng</th>
+              <th>Tổng giá tiền</th>
             </tr>
           </thead>
           <tbody>
@@ -31,12 +31,12 @@ function Cart() {
               <td>
                 <img src={f1} alt="" />
               </td>
-              <td>Giày nike</td>
-              <td>100$</td>
+              <td>PUMA BLACK-OCE</td>
+              <td>140$</td>
               <td>
-                <input type="number" value="1" />
+                <input type="number" defaultValue="1" />
               </td>
-              <td>$100$</td>
+              <td>$140$</td>
             </tr>
             <tr>
               <td>
@@ -47,12 +47,12 @@ function Cart() {
               <td>
                 <img src={f1} alt="" />
               </td>
-              <td>Giày nike</td>
-              <td>100$</td>
+              <td>PUMA BLACK-OCE</td>
+              <td>140$</td>
               <td>
-                <input type="number" value="1" />
+                <input type="number" defaultValue="1" />
               </td>
-              <td>$100$</td>
+              <td>$140$</td>
             </tr>
             <tr>
               <td>
@@ -63,12 +63,12 @@ function Cart() {
               <td>
                 <img src={f1} alt="" />
               </td>
-              <td>Giày nike</td>
-              <td>100$</td>
+              <td>PUMA BLACK-OCE </td>
+              <td>140$</td>
               <td>
-                <input type="number" value="1" />
+                <input type="number" defaultValue="1" />
               </td>
-              <td>$100$</td>
+              <td>$140$</td>
             </tr>
           </tbody>
         </table>
@@ -85,14 +85,18 @@ function Cart() {
         <div id="subtotal">
           <h3>Hóa đơn</h3>
           <table>
-            <tr>
-              <td>Số tiền</td>
-              <td>300$</td>
-            </tr>
-            <tr>
-              <td>Tiền ship</td>
-              <td>Miễn Phí</td>
-            </tr>
+            <thead>
+              <tr>
+                <td>Số tiền</td>
+                <td>520$</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Tiền ship</td>
+                <td>Miễn Phí</td>
+              </tr>
+            </tbody>
           </table>
           <button id="thanhtoan" className="normal">
             Thanh toán

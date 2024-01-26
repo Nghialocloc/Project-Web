@@ -18,30 +18,28 @@ function Products() {
           {data.map((data, index) => {
             if (data.feature == true) {
               return (
-                <div className="pro">
-                  <div key={index}>
-                    <data feature={true} />
-                    <a href="detail">
-                      <div className="padding-img">
-                        <img src={data.img}></img>
+                <div className="pro" key={index}>
+                  {/* <data feature={true} /> */}
+                  <a href={"detail"}>
+                    <div className="padding-img">
+                      <img src={data.img}></img>
+                    </div>
+                    <div className="des">
+                      <span>{data.company}</span>
+                      <h5>{data.title}</h5>
+                      <div className="star">
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
+                        <i className="far fa-star"></i>
                       </div>
-                      <div className="des">
-                        <span>{data.company}</span>
-                        <h5>{data.title}</h5>
-                        <div className="star">
-                          <i className="far fa-star"></i>
-                          <i className="far fa-star"></i>
-                          <i className="far fa-star"></i>
-                          <i className="far fa-star"></i>
-                          <i className="far fa-star"></i>
-                        </div>
-                        <h4>{data.price}</h4>
-                      </div>
-                      <a href="cart">
-                        <i className="fa fa-shopping-cart cart"></i>
-                      </a>
-                    </a>
-                  </div>
+                      <h4>{data.price}</h4>
+                    </div>
+                    <button href="cart">
+                      <i className="fa fa-shopping-cart cart"></i>
+                    </button>
+                  </a>
                 </div>
               );
             }
