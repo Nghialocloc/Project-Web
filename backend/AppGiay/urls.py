@@ -5,7 +5,7 @@ from .views_client import ManageGioHang, GetDetailsGiay, GetReviewGiay
 from .views_client import ManageReview, HistoryActivities, ShowDetailsAccount
 
 urlpatterns = [
-    #server
+    #Server
     path('manageDanhmucgiay', ManageDanhMucGiay.as_view()),
     path('manageChitietgiay', ManageChitietGiay.as_view()),
     path('manageAccount', ManageAccount.as_view()),

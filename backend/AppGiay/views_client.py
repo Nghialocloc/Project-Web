@@ -72,7 +72,6 @@ def cofirm_donhang(request_data, tenkhachhang,diachi,email,sdt):
         )
     elif idkhachhang != 10000:
         donhang = Donhang.objects.get(iddonhang = iddonhang)
-        donhang.trangthai = 'Confirm'
         donhang.save()
         return Response(DonHangSerializer(donhang).data, status=status.HTTP_202_ACCEPTED)
     else:
@@ -85,7 +84,6 @@ def cofirm_donhang(request_data, tenkhachhang,diachi,email,sdt):
 
         donhang = Donhang.objects.get(iddonhang = iddonhang)
         donhang.idkhachhang = Khachhang(idkhachhang=idkh)
-        donhang.trangthai = 'Confirm'
         donhang.save()
         return Response(DonHangSerializer(donhang).data, status=status.HTTP_202_ACCEPTED)
 
@@ -468,7 +466,7 @@ class GetReviewGiay(APIView):
         except Exception as e:
             traceback.print_exc()
             return Response(
-                {'error': 'Some exeption happened'}, 
+                {'error': 'Some exeption happened'},
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

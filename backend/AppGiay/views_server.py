@@ -176,6 +176,12 @@ class ManageAccount(APIView):
             else:
                 number = request.data['id']
                 account = UserAccount.objects.get(id=number)
+                if account.is_manager == 1:
+                    nhanvien = Nhanvien.objects.get(id=number)
+                    nhanvien.delete()
+                elif account.is_manager == 0:
+                    khachhang = Khachhang.objects.get(id=number)
+                    khachhang.delete()
                 account.delete()
                 return Response(
                     {'error': 'Delete successful'}, 
@@ -552,6 +558,10 @@ class ManageOrder(APIView):
                     khachhang.diemtichluy += tichluy
                 else:
                     pass
+            elif action == 2 :
+                donhang = Donhang.objects.get(iddonhang = iddonhang) 
+                donhang.trangthai = 'Confirm'
+                donhang.save()
             else :
                 return  Response(
                     {'error': 'Something went wrong'}, 
