@@ -75,7 +75,7 @@ class AuthUserUserPermissions(models.Model):
 
 #Account Managerclass
 class UserAccountManager(BaseUserManager):
-    def create_customer(self, email, accountname, sex, brithday, joined, password = None):
+    def create_student(self, email, accountname, sex, brithday, joined, password = None):
         if not email:
             raise ValueError('User must have email address')
         
@@ -87,20 +87,20 @@ class UserAccountManager(BaseUserManager):
         
         return user
     
-    def create_manager(self, email, accountname, sex, brithday, joined,password = None):
-        user = self.create_customer(email, accountname, sex, brithday, joined, password)
-        user.is_manager = True
+    def create_teacher(self, email, accountname, sex, brithday, joined,password = None):
+        user = self.create_student(email, accountname, sex, brithday, joined, password)
+        user.is_teacher = True
         
         user.save()
 
         return user
     
     def create_superuser(self, email, accountname, sex, brithday, joined,password = None):
-        user = self.create_customer(self, email, accountname,sex, brithday, joined,password)
+        user = self.create_student(self, email, accountname,sex, brithday, joined,password)
         
         user.is_superuser = True
         user.is_staff = True
-        user.is_manager = True
+        user.is_teacher = True
         
         user.save()
         
@@ -109,13 +109,13 @@ class UserAccountManager(BaseUserManager):
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(db_column='IDUser', primary_key=True) # Field name made lowercase.
-    email = models.EmailField(db_column='Email', max_length=100, unique= True)  # Field name made lowercase.
+    email = models.EmailField(db_column='Email', max_length=120, unique= True)  # Field name made lowercase.
     accountname = models.CharField( max_length=100, unique= True, default= "Guest" ) # Field name made lowercase.
-    gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
+    gioitinh = models.SmallIntegerField(db_column='GioiTinh', db_comment=' Nam = 0, Nữ = 1, Khac = 2')  # Field name made lowercase.
     ngaysinh = models.DateField(db_column='NgaySinh')  # Field name made lowercase.
     date_joined = models.DateTimeField()
     is_active = models.BooleanField(default= True)
-    is_manager = models.BooleanField(default=False)
+    is_teacher = models.BooleanField(default=False)
     
     objects = UserAccountManager()
     
@@ -178,124 +178,28 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 #DatabaseGroup
-class Nhanvien(models.Model):
-    idnhanvien = models.AutoField(db_column='IDNhanVien', primary_key=True)  # Field name made lowercase.
-    tennhanvien = models.CharField(db_column='TenNhanVien', max_length=50)  # Field name made lowercase.
-    tenchucvu = models.CharField(db_column='TenChucVu', max_length=50)  # Field name made lowercase.
+class GiangVien(models.Model):
+    idgiangvien = models.AutoField(db_column='IDGiangVien', primary_key=True)  # Field name made lowercase.
+    tengiangvien = models.CharField(db_column='TenGiangVien', max_length=50)  # Field name made lowercase.
+    tenchucvu = models.CharField(db_column='TenChucVu', max_length=25)  # Field name made lowercase.
     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
     id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser') # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'nhanvien'
+        managed = True
+        db_table = 'giangvien'
 
 
-class Khachhang(models.Model):
-    idkhachhang = models.AutoField(db_column='IDKhachHang', primary_key=True)  # Field name made lowercase.
-    tenkhachhang = models.CharField(db_column='TenKhachHang', max_length=50)  # Field name made lowercase.
+class SinhVien(models.Model):
+    idsinhvien = models.AutoField(db_column='IDSinhVien', primary_key=True)  # Field name made lowercase.
+    tensinhvien = models.CharField(db_column='TenSinhVien', max_length=50)  # Field name made lowercase.
     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
-    email = models.CharField(db_column='Email', max_length=100)  # Field name made lowercase.
     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
-    diemtichluy = models.SmallIntegerField(db_column='DiemTichLuy',blank=True, null=True)  # Field name made lowercase.
-    id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser',blank=True, null=True) # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'khachhang'
-
-
-class Danhmucgiay(models.Model):
-    iddanhmuc = models.AutoField(db_column='IDDanhMuc', primary_key=True)  # Field name made lowercase.
-    tendanhmuc = models.CharField(db_column='TenDanhMuc', max_length=100)  # Field name made lowercase.
-    loaigiay = models.CharField(db_column='LoaiGiay', max_length=50)  # Field name made lowercase.
-    hangsanxuat = models.CharField(db_column='HangSanXuat', max_length=50)  # Field name made lowercase.
-    giatien = models.IntegerField(db_column='GiaTien')  # Field name made lowercase.
-    doituong = models.SmallIntegerField(db_column='DoiTuong', db_comment='Đối tượng hướng tới : Nam = 0,Nữ = 1, Khac = 2')  # Field name made lowercase.
-    class Meta:
-        managed = False
-        db_table = 'danhmucgiay'
-
-
-
-class Chitietgiay(models.Model):
-    idgiay = models.AutoField(db_column='IDGiay', primary_key=True, db_comment='Mã của mặt hàng giầy')  # Field name made lowercase.
-    iddanhmuc = models.ForeignKey('Danhmucgiay', models.DO_NOTHING, db_column='IDDanhMuc')  # Field name made lowercase.
-    kichco = models.FloatField(db_column='KichCo')  # Field name made lowercase.
-    mausac = models.CharField(db_column='MauSac', max_length=20)  # Field name made lowercase.
-    sotonkho = models.IntegerField(db_column='SoTonKho')  # Field name made lowercase.
-    # anhMatTren = models.ImageField(null=True, blank=True, upload_to="image/")
-    # anhMatBen = models.ImageField(null=True, blank=True, upload_to="image/")
-
-    class Meta:
-        managed = False
-        db_table = 'chitietgiay'
-
-
-class Chitietdonhang(models.Model):
-    idchitiet = models.AutoField(db_column='IDChitiet', primary_key=True)  # Field name made lowercase.
-    iddonhang = models.ForeignKey('Donhang', models.DO_NOTHING, db_column='IDDonHang')  # Field name made lowercase.
-    idgiay = models.ForeignKey('Chitietgiay', models.DO_NOTHING, db_column='IDGiay')  # Field name made lowercase.
-    soluong = models.SmallIntegerField(db_column='SoLuong')  # Field name made lowercase.
-    dongia = models.IntegerField(db_column='DonGia')  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'chitietdonhang'
-
-
-class ChitiethoadonNhapHang(models.Model):
-    idchitiet = models.AutoField(db_column='IDChitiet', primary_key=True)  # Field name made lowercase.
-    idhoadon = models.ForeignKey('HoadonNhapHang', models.DO_NOTHING, db_column='IDHoaDon')  # Field name made lowercase.
-    idgiay = models.ForeignKey(Chitietgiay, models.DO_NOTHING, db_column='IDGiay')  # Field name made lowercase.
-    soluong = models.SmallIntegerField(db_column='SoLuong')  # Field name made lowercase.
-    dongia = models.IntegerField(db_column='DonGia')  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'chitiethoadon_nhap_hang'
-
-
-class Donhang(models.Model):
-    iddonhang = models.AutoField(db_column='IDDonHang', primary_key=True)  # Field name made lowercase.
-    idkhachhang = models.ForeignKey('Khachhang', models.DO_NOTHING, db_column='IDKhachHang')  # Field name made lowercase.
-    sotienthanhtoan = models.IntegerField(db_column='SoTienThanhToan')  # Field name made lowercase.
-    createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
-    trangthai = models.CharField(db_column='TrangThai', max_length=10,db_comment='Trạng thái đon hàng : Checking=0, Confirm=1, Đang giao=2, Đã hoàn thành=3') 
- # Field name made lowercase.
-    confirmby = models.CharField(db_column='ConfirmBy', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    dvvanchuyen = models.CharField(db_column='DVVanChuyen', max_length=100, blank=True, null=True)  # Field name made lowercase.
-    tennv_vanchuyen = models.CharField(db_column='TenNV_VanChuyen', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    sdt = models.CharField(db_column='SDT', max_length=15, blank=True, null=True)  # Field name made lowercase.
-    socccd = models.CharField(db_column='SoCCCD', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    thoigiannhan = models.DateTimeField(db_column='ThoiGianNhan', blank=True, null=True)  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'donhang'
-
-
-class HoadonNhapHang(models.Model):
-    idhoadon = models.AutoField(db_column='IDHoaDon', primary_key=True)  # Field name made lowercase.
-    idkhachhang = models.ForeignKey('Khachhang', models.DO_NOTHING, db_column='IDKhachHang')  # Field name made lowercase.
-    sotienthanhtoan = models.IntegerField(db_column='SoTienThanhToan')  # Field name made lowercase.
-    createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
-    createby = models.CharField(db_column='CreateBy', max_length=50)  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'hoadon_nhap_hang'
-
-
-class Reviewsanpham(models.Model):
-    idreview = models.AutoField(db_column='IDReview', primary_key=True)  # Field name made lowercase.
-    id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDUser')  # Field name made lowercase.
-    idloaigiay = models.ForeignKey('Danhmucgiay', models.DO_NOTHING, db_column='IDLoaiGiay')  # Field name made lowercase.
-    comment = models.CharField(db_column='Comment', max_length=300)  # Field name made lowercase.
-    createday = models.DateField(db_column='CreateDay')  # Field name made lowercase.
+    id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser') # Field name made lowercase.
 
     class Meta:
         managed = True
-        db_table = 'reviewsanpham'
+        db_table = 'sinhvien'
 
 
