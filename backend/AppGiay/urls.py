@@ -1,6 +1,5 @@
 from django.urls import path
 from .QuanLyTK import ManageAccount, ManageSingleUser
-from .QuanLyLopHoc import ManageClass
 
 
 urlpatterns = [

@@ -197,8 +197,21 @@ class ManageSingleUser(APIView):
         try:
             user = request.user
             user_seria = UserAccountSerializer(user)
+            user_id = user.data['id']
+            
+            if not user.data['is_teacher']:
+                user_detail = SinhVien.objects.get(user_id = user_id) 
+                detail = SinhVienSerializer(user_detail)
+                
+            else:
+                user_detail = GiangVien.objects.get(user_id = user_id)
+                detail = GiangVienSerializer(user_detail)
+
             return Response(
-                {'user': user_seria.data,},
+                {
+                    'user': user_seria.data,
+                    'detail': detail.data
+                 },
                 status=status.HTTP_200_OK
             )
             
