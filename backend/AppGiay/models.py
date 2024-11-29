@@ -177,6 +177,7 @@ class DjangoSession(models.Model):
         managed = False
         db_table = 'django_session'
 
+
 #DatabaseGroup
 class GiangVien(models.Model):
     idgiangvien = models.AutoField(db_column='IDGiangVien', primary_key=True)  # Field name made lowercase.
@@ -204,3 +205,24 @@ class SinhVien(models.Model):
         db_table = 'sinhvien'
 
 
+class LopHoc(models.Model):
+    idlophoc = models.AutoField(db_column='IDLopHoc', primary_key=True)  # Field name made lowercase.
+    tenlophoc = models.CharField(db_column='TenLopHoc', max_length=50)  # Field name made lowercase.
+    mota = models.CharField(db_column='MoTa', max_length=250, default='DEFAULT VALUE')  # Field name made lowercase.
+    cahoc = models.SmallIntegerField(db_column='CaHoc', db_comment=' Ca 1 = 0, Ca 2 = 1, Ca 3 = 2, ...')  # Field name made lowercase.
+    idgiangvien = models.ForeignKey('GiangVien', models.DO_NOTHING, db_column='IDGiangVien') # Field name made lowercase.
+
+    class Meta:
+        managed = True
+        db_table = 'lophoc'
+
+
+class ThanhVienLop(models.Model):
+    idthanhvien = models.AutoField(db_column='IDThanhVien', primary_key=True)  # Field name made lowercase.
+    tinhtranghoc = models.SmallIntegerField(db_column='TinhTrangHoc', db_comment='Đang học  = 0, Xin nghỉ  = 1, Không còn học = 2')  # Field name made lowercase.
+    idsinhvien = models.ForeignKey('SinhVien', models.DO_NOTHING, db_column='IDSinhVien') # Field name made lowercase.
+    idlophoc = models.ForeignKey('LopHoc', models.DO_NOTHING, db_column='IDLopHoc') # Field name made lowercase.
+
+    class Meta:
+        managed = True
+        db_table = 'thanhvienlop'

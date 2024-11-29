@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import SinhVien, GiangVien
 from .models import UserAccount, UserAccountManager
-from .serializers import SinhVienSerializer, GiangVienSerializer
 from .serializers import UserAccountSerializer
+from .serializers import SinhVienSerializer, GiangVienSerializer
 from django.contrib.auth import get_user_model
 import traceback
 import random, string
@@ -28,12 +28,12 @@ def insert_sinhvien(requested_data,Email,accountName,user):
         if (SinhVien.objects.filter(idsinhvien=sinhvien).count() == 0):
             break
     tensinhvien = requested_data['tensinhvien']
-    # email = Email
+    nganhhoc = requested_data['nganhhoc']
     diachi = requested_data['diachi']
     sdt = requested_data['sdt']
     user_id = user
     
-    student = SinhVien(idsinhvien=sinhvien,tensinhvien=tensinhvien, 
+    student = SinhVien(idsinhvien=sinhvien,tensinhvien=tensinhvien, nganhhoc=nganhhoc,
                         diachi=diachi,sdt=sdt,id = user_id)
     student.save()
     
@@ -45,7 +45,6 @@ def insert_giangvien(requested_data,Email,accountName,user):
         if (GiangVien.objects.filter(idgiangvien=giangvien).count() == 0):
             break
     tengiangvien = requested_data['tengiangvien']
-    # email = Email
     tenchucvu = requested_data['tenchucvu']
     diachi = requested_data['diachi']
     sdt = requested_data['sdt']

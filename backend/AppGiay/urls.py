@@ -1,10 +1,11 @@
 from django.urls import path
 from .QuanLyTK import ManageAccount, ManageSingleUser
+from .QuanLyLopHoc import ManageClass
 
 
 urlpatterns = [
     #Server
-    path('Manage Account', ManageAccount.as_view()),
-    path('Search Account', ManageSingleUser.as_view()),
+    path('AdminManageAccount', ManageAccount.as_view()),
+    path('ManageAccount', ManageSingleUser.as_view()),
 
 ]
