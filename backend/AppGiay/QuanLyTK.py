@@ -190,7 +190,7 @@ class ManageAccount(APIView):
             )
 
 
-class RetriveSingleUser(APIView):
+class ManageSingleUser(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
@@ -209,4 +209,25 @@ class RetriveSingleUser(APIView):
                 {'error': 'Something went wrong'},
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+        
+    def post(self, request):
+        try:
+            user = request.user
+            user_seria = UserAccountSerializer(user)
+            if(user_seria.is_valid):
+                user.auth.token.delete()
+                return Response(
+                    {"Message" : "You are logged out"}, 
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {"Message" : "User not found or not vaild"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -194,6 +194,7 @@ class GiangVien(models.Model):
 class SinhVien(models.Model):
     idsinhvien = models.AutoField(db_column='IDSinhVien', primary_key=True)  # Field name made lowercase.
     tensinhvien = models.CharField(db_column='TenSinhVien', max_length=50)  # Field name made lowercase.
+    nganhhoc = models.CharField(db_column='NganhHoc', max_length=30, default='DEFAULT VALUE')  # Field name made lowercase.
     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
     id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser') # Field name made lowercase.
