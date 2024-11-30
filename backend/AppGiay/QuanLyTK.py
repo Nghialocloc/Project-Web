@@ -17,15 +17,18 @@ def is_valid_param(param) :
     return param != " " and param is not None and param != ""
 
 
-def id_generator (size = 5, chars=string.digits):
+def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
 # Class quan li he thong nguoi dung
 def insert_sinhvien(requested_data,Email,accountName,user):
+
+    namhoc = requested_data['namhoc']
     while True:
-        sinhvien = id_generator(size=5)
-        if (SinhVien.objects.filter(idsinhvien=sinhvien).count() == 0):
+        sinhvien = id_generator(size=4)
+        idsinhvien = str(namhoc) + str(sinhvien)
+        if (SinhVien.objects.filter(idsinhvien=  int(idsinhvien) ).count() == 0):
             break
     tensinhvien = requested_data['tensinhvien']
     nganhhoc = requested_data['nganhhoc']
@@ -41,7 +44,7 @@ def insert_sinhvien(requested_data,Email,accountName,user):
 
 def insert_giangvien(requested_data,Email,accountName,user):
     while True:
-        giangvien = id_generator(size=5)
+        giangvien = id_generator(size=8)
         if (GiangVien.objects.filter(idgiangvien=giangvien).count() == 0):
             break
     tengiangvien = requested_data['tengiangvien']
@@ -60,6 +63,7 @@ def insert_giangvien(requested_data,Email,accountName,user):
 class ManageAccount(APIView):
     permission_classes = (permissions.AllowAny, )
     
+    #Create user info
     def post(self, request):
         try:
             data = request.data
@@ -119,8 +123,16 @@ class ManageAccount(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    #Get all user info
     def get(self, request, format=None):
         try:
+            user= request.user
+            if ( not user.is_teacher ) or user.is_active == False:
+                return Response(
+                    {'error': 'User does not have necessary permission' }, 
+                    status=status.HTTP_403_FORBIDDEN
+            )
+
             userAll = UserAccount.objects.all()
             user = UserAccountSerializer(userAll, many=True)
             return Response(
@@ -135,11 +147,16 @@ class ManageAccount(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    #Set user info
     def put(self, request):
         try: 
             user= request.user
-            if not user.is_teacher:
-                return Response({'error': 'User does not have necessary permission' }, status=status.HTTP_403_FORBIDDEN)
+            if ( not user.is_teacher ) or user.is_active == False:
+                return Response(
+                    {'error': 'User does not have necessary permission' }, 
+                    status=status.HTTP_403_FORBIDDEN
+            )
+
             else:
                 number = request.data['id']
                 accountname = request.data['accountname']
@@ -162,37 +179,12 @@ class ManageAccount(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def delete(self, request):
-        try: 
-            user= request.user
-            if not user.is_teacher:
-                return Response({'error': 'User does not have necessary permission' }, status=status.HTTP_403_FORBIDDEN)
-            else:
-                number = request.data['id']
-                account = UserAccount.objects.get(id=number)
-                if account.is_teacher == 1:
-                    giangvien = GiangVien.objects.get(id=number)
-                    giangvien.delete()
-                elif account.is_teacher == 0:
-                    sinhvien = SinhVien.objects.get(id=number)
-                    sinhvien.delete()
-                account.delete()
-                return Response(
-                    {'error': 'Delete successful'}, 
-                    status= status.HTTP_200_OK
-                )
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Some exeption happened'}, 
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
 
 class ManageSingleUser(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
+    #Get single user info
     def get(self, request, format=None):
         try:
             user = request.user
@@ -222,6 +214,7 @@ class ManageSingleUser(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
+    #Logout
     def post(self, request):
         try:
             user = request.user
@@ -241,5 +234,52 @@ class ManageSingleUser(APIView):
             traceback.print_exc()
             return Response(
                 {'error': 'Something went wrong'},
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+
+class ChangeAccountState(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+    #Activate or deactive user
+    def put(self, request):
+        try: 
+            user= request.user
+            if ( not user.is_teacher ) or user.is_active == False:
+                return Response(
+                    {'error': 'User does not have necessary permission' }, 
+                    status=status.HTTP_403_FORBIDDEN
+            )
+
+
+            number = request.data['id']
+            option = request.data['option']
+            account = UserAccount.objects.get(id=number)
+            
+            if(option == 0):
+                account.is_active = False
+                account.save()
+                return Response(
+                    {'Update success'}, 
+                    status= status.HTTP_202_ACCEPTED
+                )
+            elif (option == 1) :
+                account.is_active = True
+                account.save()
+                return Response(
+                    {'Update success'}, 
+                    status= status.HTTP_202_ACCEPTED
+                )
+            else :
+                return Response(
+                    {'error': 'Index out of bound'}, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )
+
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
