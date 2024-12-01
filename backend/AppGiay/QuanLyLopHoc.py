@@ -55,9 +55,11 @@ class ManageClassTeacher(APIView):
                     tenlophoc = serializer.data.get('tenlophoc') 
                     mota = serializer.data.get('mota')
                     cahoc = serializer.data.get('cahoc')
+                    ngayhoc = serializer.data.get('ngayhoc')
 
                 
-                    lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, cahoc = cahoc, idgiangvien = giangvien)
+                    lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, 
+                                    cahoc = cahoc, ngayhoc = ngayhoc, idgiangvien = giangvien)
                     lophoc.save()
                 
                     return Response(
@@ -98,15 +100,17 @@ class ManageClassTeacher(APIView):
                 for group in lopgiangday_seria :
                     idlophoc = group.data.get('idlophoc')
                     tenlophoc = group.data.get('tenlophoc')
-                    cahoc = group.data.get('cahoc')
                     mota = group.data.get('mota')
+                    cahoc = group.data.get('cahoc')
+                    ngayhoc = group.data.get('ngayhoc')
 
                     list_class.append(
                         {
                             "Ma lop" : idlophoc,
                             "Ten lop hoc" : tenlophoc,
                             "Mo ta" : mota,
-                            "Gio bat dau" : cahoc
+                            "Gio bat dau" : cahoc,
+                            "Ngay hoc trong tuan" : ngayhoc
                         }
                     )
 
@@ -151,13 +155,15 @@ class ManageClassTeacher(APIView):
                     status= status.HTTP_404_NOT_FOUND
                 )
             tenlophoc = data['tenlophoc']
-            cahoc = data['cahoc']
             mota = data['mota']
+            cahoc = data['cahoc']
+            ngayhoc = data['ngayhoc']
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             lophoc.tenlophoc = tenlophoc
-            lophoc.cahoc = cahoc
             lophoc.mota = mota
+            lophoc.cahoc = cahoc
+            lophoc.ngayhoc = ngayhoc
             lophoc.save()
             return JsonResponse(
                 {'Update success'}
@@ -328,7 +334,7 @@ class ManageClassMember(APIView):
     def put(self, request):
         try: 
             user= request.user
-            if not user.is_teacher or user.is_active == False:
+            if (not user.is_teacher) or user.is_active == False:
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
@@ -340,10 +346,17 @@ class ManageClassMember(APIView):
                 return JsonResponse(
                     {'error': 'No matching data'}
                     ,safe=False 
-                    ,status= status.HTTP_400_BAD_REQUEST
+                    ,status= status.HTTP_204_NO_CONTENT
                 )
             
             tinhtranghoc = data['tinhtranghoc']
+            if tinhtranghoc < 0 or tinhtranghoc > 3:
+                return JsonResponse(
+                    {'error': 'Mismatch data. Please check with the admin'}
+                    ,safe=False 
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
+            
             thanhvienlop = ThanhVienLop.objects.get(idthanhvien = idthanhvien)
             thanhvienlop.tinhtranghoc = tinhtranghoc
             thanhvienlop.save()
@@ -423,8 +436,9 @@ class ManageClassStudent(APIView):
                     tinhtranghoc = group.data.get('tinhtranghoc')
                     lophoc = LopHoc.objects.get(idlophoc = idlophoc)
                     tenlophoc = lophoc.tenlophoc
-                    cahoc = lophoc.cahoc
                     mota = lophoc.mota
+                    cahoc = lophoc.cahoc
+                    ngayhoc = lophoc.ngayhoc
 
                     list_class.append(
                         {
@@ -432,6 +446,7 @@ class ManageClassStudent(APIView):
                             "Ten lop hoc" : tenlophoc,
                             "Mo ta" : mota,
                             "Gio bat dau" : cahoc,
+                            "Ngay hoc" : ngayhoc,
                             "Trang thai" : tinhtranghoc
                         }
                     )

@@ -210,6 +210,7 @@ class LopHoc(models.Model):
     tenlophoc = models.CharField(db_column='TenLopHoc', max_length=50)  # Field name made lowercase.
     mota = models.CharField(db_column='MoTa', max_length=250, default='DEFAULT VALUE')  # Field name made lowercase.
     cahoc = models.SmallIntegerField(db_column='CaHoc', db_comment=' Ca 1 = 0, Ca 2 = 1, Ca 3 = 2, ...')  # Field name made lowercase.
+    ngayhoc = models.SmallIntegerField(db_column='NgayHoc', db_comment=' Thứ 2 = 0, Thứ 3 = 1, Thứ 4 = 2, ...')  # Field name made lowercase.
     idgiangvien = models.ForeignKey('GiangVien', models.DO_NOTHING, db_column='IDGiangVien') # Field name made lowercase.
 
     class Meta:
