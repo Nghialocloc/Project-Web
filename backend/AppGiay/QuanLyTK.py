@@ -54,7 +54,7 @@ def insert_giangvien(requested_data,Email,accountName,user):
     user_id = user
     
     teacher = GiangVien(idgiangvien=giangvien,tengiangvien=tengiangvien, tenchucvu=tenchucvu
-                        ,diachi=diachi,sdt=sdt, id = user_id)
+                        , diachi=diachi, sdt=sdt, id = user_id)
     teacher.save()
     
     return teacher
@@ -124,7 +124,7 @@ class ManageAccount(APIView):
             )
 
     #Get all user info
-    def get(self, request, format=None):
+    def get(self, request):
         try:
             user= request.user
             if ( not user.is_teacher ) or user.is_active == False:
@@ -162,6 +162,7 @@ class ManageAccount(APIView):
                 accountname = request.data['accountname']
                 gioitinh = request.data['gioitinh']
                 ngaysinh = request.data['ngaysinh']
+                
                 account = UserAccount.objects.get(id=number)
                 account.accountname = accountname
                 account.gioitinh = gioitinh
@@ -189,14 +190,14 @@ class ManageSingleUser(APIView):
         try:
             user = request.user
             user_seria = UserAccountSerializer(user)
-            user_id = user.data['id']
+            user_id = user.id
             
-            if not user.data['is_teacher']:
-                user_detail = SinhVien.objects.get(user_id = user_id) 
+            if not user.is_teacher:
+                user_detail = SinhVien.objects.get(id = user_id) 
                 detail = SinhVienSerializer(user_detail)
                 
             else:
-                user_detail = GiangVien.objects.get(user_id = user_id)
+                user_detail = GiangVien.objects.get(id = user_id)
                 detail = GiangVienSerializer(user_detail)
 
             return Response(
@@ -220,7 +221,7 @@ class ManageSingleUser(APIView):
             user = request.user
             user_seria = UserAccountSerializer(user)
             if(user_seria.is_valid):
-                user.auth.token.delete()
+                user.token.delete()
                 return Response(
                     {"Message" : "You are logged out"}, 
                     status=status.HTTP_200_OK
@@ -252,9 +253,14 @@ class ChangeAccountState(APIView):
                     status=status.HTTP_403_FORBIDDEN
             )
 
-
             number = request.data['id']
             option = request.data['option']
+            if User.objects.filter(id = number).count() == 0:
+                return  Response(
+                    {'error': 'Khong tim thay user'}, 
+                    status= status.HTTP_404_NOT_FOUND
+                )
+
             account = UserAccount.objects.get(id=number)
             
             if(option == 0):

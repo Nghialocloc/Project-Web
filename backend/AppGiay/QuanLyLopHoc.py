@@ -56,10 +56,13 @@ class ManageClassTeacher(APIView):
                     mota = serializer.data.get('mota')
                     cahoc = serializer.data.get('cahoc')
                     ngayhoc = serializer.data.get('ngayhoc')
+                    kyhoc = serializer.data.get('kyhoc')
+                    maxstudent = serializer.data.get('sosinhvientoida')
+                    trangthai = 0
 
                 
-                    lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, 
-                                    cahoc = cahoc, ngayhoc = ngayhoc, idgiangvien = giangvien)
+                    lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, cahoc = cahoc, 
+                                    ngayhoc = ngayhoc, kyhoc = kyhoc, maxstudent = maxstudent, trangthai = trangthai, idgiangvien = giangvien)
                     lophoc.save()
                 
                     return Response(
@@ -103,6 +106,9 @@ class ManageClassTeacher(APIView):
                     mota = group.data.get('mota')
                     cahoc = group.data.get('cahoc')
                     ngayhoc = group.data.get('ngayhoc')
+                    kyhoc = group.data.get('kyhoc')
+                    maxstudent = group.data.get('maxstudent')
+                    trangthai = group.data.get('status')
 
                     list_class.append(
                         {
@@ -110,7 +116,10 @@ class ManageClassTeacher(APIView):
                             "Ten lop hoc" : tenlophoc,
                             "Mo ta" : mota,
                             "Gio bat dau" : cahoc,
-                            "Ngay hoc trong tuan" : ngayhoc
+                            "Ngay hoc trong tuan" : ngayhoc,
+                            "Ky hoc" : kyhoc,
+                            "So sinh vien toi da" : maxstudent,
+                            "Trang thai" : trangthai,
                         }
                     )
 
@@ -158,12 +167,18 @@ class ManageClassTeacher(APIView):
             mota = data['mota']
             cahoc = data['cahoc']
             ngayhoc = data['ngayhoc']
+            kyhoc = data['kyhoc']
+            maxstudent = data['sosinhvientoida']
+            trangthai = data['trangthai']
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             lophoc.tenlophoc = tenlophoc
             lophoc.mota = mota
             lophoc.cahoc = cahoc
             lophoc.ngayhoc = ngayhoc
+            lophoc.kyhoc = kyhoc
+            lophoc.maxstudent = maxstudent
+            lophoc.trangthai = trangthai
             lophoc.save()
             return JsonResponse(
                 {'Update success'}
@@ -234,19 +249,20 @@ class ManageClassMember(APIView):
                 )
 
             data=request.data
-            sinhvien = data['idsinhvien']
-            if SinhVien.objects.filter(idsinhvien = sinhvien).count() == 0:
-                return  Response(
-                    {'error': 'Khong tim thay sinh vien'}, 
-                    status= status.HTTP_404_NOT_FOUND
-                )
-            lophoc = data['idlophoc']
+            sinhvien =  SinhVien.objects.get(id = user.id)
+            idlophoc = data['idlophoc']
+            lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             if LopHoc.objects.filter(idlophoc = lophoc).count() == 0:
                 return  Response(
                     {'error': 'Khong tim thay lop hoc'}, 
                     status= status.HTTP_404_NOT_FOUND
                 )
-            
+            elif lophoc.trangthai != 0:
+                return  Response(
+                    {'error': 'Lớp đã quá thời hạn đăng ký'}, 
+                    status= status.HTTP_404_NOT_FOUND
+                )
+
             serializer = ThanhVienLopSerializer(data=request.data)
             if serializer.is_valid():
                 while True:
@@ -254,7 +270,7 @@ class ManageClassMember(APIView):
                     if (ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0):    
                         break                      
                 
-                thanhvienlop = ThanhVienLop(idthanhvien = idthanhvien, tinhtranghoc = 0, idsinhvien = sinhvien, idlophoc = lophoc)
+                thanhvienlop = ThanhVienLop(idthanhvien = idthanhvien, tinhtranghoc = 0, idsinhvien = sinhvien, idlophoc = idlophoc)
                 thanhvienlop.save()
                 
                 return Response(
@@ -278,13 +294,25 @@ class ManageClassMember(APIView):
     def get(self, request):
         try:
             list_class_member = []
-
             data = request.data
+
             idlophoc = data['idlophoc']
+            if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
+                return  Response(
+                    {'error': 'Khong tim thay lop hoc'}, 
+                    status= status.HTTP_404_NOT_FOUND
+                )
+            
             lopgiangday = LopHoc.objects.get(idlophoc = idlophoc)
             tenlophoc = lopgiangday.tenlophoc
-            cahoc = lopgiangday.cahoc
             mota = lopgiangday.mota
+            cahoc = lopgiangday.cahoc
+            ngayhoc = lopgiangday.ngayhoc
+            kyhoc = lopgiangday.kyhoc
+            trangthai = lopgiangday.trangthai
+
+            count = 0
+            tengiangvien = GiangVien.objects.get(idgiangvien = lopgiangday.idgiangvien)
 
             thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
             thanhvien_seria = ThanhVienLopSerializer(data = thanhvienlop, many = True)
@@ -306,12 +334,20 @@ class ManageClassMember(APIView):
                         }
                     )
 
+                    count = count + 1
+
                 return Response(
                     {
                         'Thong tin chi tiet' : {
+                            "Ma lop hoc " : idlophoc,
                             "Ten lop hoc" : tenlophoc,
+                            "Ten giang vien" : tengiangvien,
                             "Mo ta" : mota,
-                            "Gio bat dau" : cahoc
+                            "Gio bat dau" : cahoc,
+                            "Ngay hoc" : ngayhoc,
+                            "Ky hoc" : kyhoc,
+                            "So sinh vien " : count,
+                            "Trang thai lop" : trangthai 
                         },
                         'Danh sach thanhvien': list_class_member
                     }, 
@@ -384,15 +420,16 @@ class ManageClassMember(APIView):
                 )
             
             data=request.data
-            idthanhvien = data['idthanhvien']
-            if ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0:
+            idsinhvien = data['idsinhvien']
+            idlophoc = data['idlophoc']
+            if SinhVien.objects.filter(idsinhvien = idsinhvien).count() == 0 or LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return JsonResponse(
                     {'error': 'No matching data'}
                     ,safe=False 
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
-                thanhvienlop = ThanhVienLop.objects.get(idthanhvien = idthanhvien)
+                thanhvienlop = ThanhVienLop.objects.get(idsinhvien = idsinhvien, idlophoc = idlophoc)
                 thanhvienlop.delete()
 
                 return JsonResponse(
@@ -439,14 +476,19 @@ class ManageClassStudent(APIView):
                     mota = lophoc.mota
                     cahoc = lophoc.cahoc
                     ngayhoc = lophoc.ngayhoc
+                    kyhoc = lophoc.kyhoc
+
+                    tengiangvien = GiangVien.objects.get(idgiangvien = lophoc.idgiangvien)
 
                     list_class.append(
                         {
                             "Ma lop" : idlophoc,
                             "Ten lop hoc" : tenlophoc,
+                            "Ten giang vien" : tengiangvien,
                             "Mo ta" : mota,
                             "Gio bat dau" : cahoc,
                             "Ngay hoc" : ngayhoc,
+                            "Ky hoc" : kyhoc,
                             "Trang thai" : tinhtranghoc
                         }
                     )

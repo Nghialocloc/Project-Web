@@ -195,7 +195,7 @@ class GiangVien(models.Model):
 class SinhVien(models.Model):
     idsinhvien = models.AutoField(db_column='IDSinhVien', primary_key=True)  # Field name made lowercase.
     tensinhvien = models.CharField(db_column='TenSinhVien', max_length=50)  # Field name made lowercase.
-    nganhhoc = models.CharField(db_column='NganhHoc', max_length=30, default='DEFAULT VALUE')  # Field name made lowercase.
+    nganhhoc = models.CharField(db_column='NganhHoc', max_length=30)  # Field name made lowercase.
     diachi = models.CharField(db_column='DiaChi', max_length=200)  # Field name made lowercase.
     sdt = models.CharField(db_column='SDT', max_length=15, db_collation='utf8mb3_general_ci')  # Field name made lowercase.
     id = models.ForeignKey('UserAccount', models.DO_NOTHING, db_column='IDuser') # Field name made lowercase.
@@ -208,9 +208,12 @@ class SinhVien(models.Model):
 class LopHoc(models.Model):
     idlophoc = models.AutoField(db_column='IDLopHoc', primary_key=True)  # Field name made lowercase.
     tenlophoc = models.CharField(db_column='TenLopHoc', max_length=50)  # Field name made lowercase.
-    mota = models.CharField(db_column='MoTa', max_length=250, default='DEFAULT VALUE')  # Field name made lowercase.
+    mota = models.CharField(db_column='MoTa', max_length=250, blank=True, null=True)  # Field name made lowercase.
     cahoc = models.SmallIntegerField(db_column='CaHoc', db_comment=' Ca 1 = 0, Ca 2 = 1, Ca 3 = 2, ...')  # Field name made lowercase.
     ngayhoc = models.SmallIntegerField(db_column='NgayHoc', db_comment=' Thứ 2 = 0, Thứ 3 = 1, Thứ 4 = 2, ...')  # Field name made lowercase.
+    kyhoc = models.CharField(db_column='Ky hoc', max_length=7)  # Field name made lowercase.
+    maxstudent =  models.SmallIntegerField(db_column='SoSinhVienToiDa', default= 100)  # Field name made lowercase.
+    trangthai = models.SmallIntegerField(db_column='TrangThai', db_comment=' Đang đăng ký = 0, Đang hoạt động = 1, Đã kết thúc = 2')  # Field name made lowercase.
     idgiangvien = models.ForeignKey('GiangVien', models.DO_NOTHING, db_column='IDGiangVien') # Field name made lowercase.
 
     class Meta:
@@ -220,7 +223,7 @@ class LopHoc(models.Model):
 
 class ThanhVienLop(models.Model):
     idthanhvien = models.AutoField(db_column='IDThanhVien', primary_key=True)  # Field name made lowercase.
-    tinhtranghoc = models.SmallIntegerField(db_column='TinhTrangHoc', db_comment='Đang xét duyệt = 0, Đang học  = 1, Xin nghỉ  = 2, Không còn học = 3')  # Field name made lowercase.
+    tinhtranghoc = models.SmallIntegerField(db_column='TinhTrangHoc', db_comment='Đang xét duyệt = 0, Đang học  = 1, Tạm hoãn  = 2, Đã học = 3')  # Field name made lowercase.
     idsinhvien = models.ForeignKey('SinhVien', models.DO_NOTHING, db_column='IDSinhVien') # Field name made lowercase.
     idlophoc = models.ForeignKey('LopHoc', models.DO_NOTHING, db_column='IDLopHoc') # Field name made lowercase.
 
