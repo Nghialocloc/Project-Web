@@ -1,4 +1,5 @@
-from rest_framework import generics, permissions, status, authentication
+from rest_framework import generics, permissions, status
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import SinhVien, GiangVien
@@ -221,9 +222,9 @@ class ManageSingleUser(APIView):
             user = request.user
             user_seria = UserAccountSerializer(user)
             if(user_seria.is_valid):
-                user.token.delete()
+
                 return Response(
-                    {"Message" : "You are logged out"}, 
+                    {"Message" : "User has been logout"}, 
                     status=status.HTTP_200_OK
                 )
             else:

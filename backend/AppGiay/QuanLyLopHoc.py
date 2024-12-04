@@ -420,9 +420,8 @@ class ManageClassMember(APIView):
                 thanhvienlop = ThanhVienLop.objects.get(idsinhvien = idsinhvien, idlophoc = idlophoc)
                 thanhvienlop.delete()
 
-                return JsonResponse(
+                return Response(
                     {'Result': 'Delete successful'}
-                    ,safe=False 
                     ,status= status.HTTP_202_ACCEPTED
                 )        
 
