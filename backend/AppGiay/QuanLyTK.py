@@ -11,6 +11,8 @@ import traceback
 import random, string
 import datetime
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 User = get_user_model()
 
 # Create your views here.
@@ -196,7 +198,6 @@ class ManageSingleUser(APIView):
             if not user.is_teacher:
                 user_detail = SinhVien.objects.get(id = user_id) 
                 detail = SinhVienSerializer(user_detail)
-                
             else:
                 user_detail = GiangVien.objects.get(id = user_id)
                 detail = GiangVienSerializer(user_detail)
@@ -209,29 +210,6 @@ class ManageSingleUser(APIView):
                 status=status.HTTP_200_OK
             )
             
-        except Exception as e:
-            traceback.print_exc()
-            return Response(
-                {'error': 'Something went wrong'},
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-    #Logout
-    def post(self, request):
-        try:
-            user = request.user
-            user_seria = UserAccountSerializer(user)
-            if(user_seria.is_valid):
-
-                return Response(
-                    {"Message" : "User has been logout"}, 
-                    status=status.HTTP_200_OK
-                )
-            else:
-                return Response(
-                    {"Message" : "User not found or not vaild"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -288,5 +266,34 @@ class ChangeAccountState(APIView):
             traceback.print_exc()
             return Response(
                 {'error': 'Some exeption happened'}, 
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class BlacklistTokenView(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
+     #Logout
+    def post(self, request):
+        try:
+            user = request.user
+            user_seria = UserAccountSerializer(user)
+            if(user_seria.is_valid):
+                re_token = RefreshToken(request.data.get('refresh'))
+                re_token.blacklist()
+                return Response(
+                    {"Message" : "User has been logout"}, 
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {"Message" : "User not found or not vaild"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )

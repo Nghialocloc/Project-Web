@@ -1,44 +1,24 @@
-from rest_framework import generics, permissions, status
-from rest_framework.request import Request
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from AppGiay.models import SinhVien, GiangVien
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    def post(self, request, *args, **kwargs):
-        try:
-            respond = super().post(request, *args, **kwargs)
-            token = respond.data
-
-            access_token = token['access']
-            refresh_token = token['refresh']
-
-            res = Response()
-            res.data = {'Success login'}
-
-            res.set_cookie(
-                key="access_token",
-                value=access_token,
-                httponly=True,
-                secure=True,
-                samesite='None',
-                path='/'
-            )
-
-            res.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                httponly=True,
-                secure=True,
-                samesite='None',
-                path='/'
-            )
-
-            return res
+        # Add custom claims
+        if(user.is_teacher):
+            giangvien = GiangVien.objects.get(id= user.id)
+            token['idgiangvien'] = giangvien.idgiangvien
+            token['tengiangvien'] = giangvien.tengiangvien
+        else:
+            sinhvien = SinhVien.objects.get(id= user.id)
+            token['idsinhvien'] = sinhvien.idsinhvien
+            token['tengiangvien'] = sinhvien.tensinhvien
         
-        except:
-            return Response(
-                {'error': 'Something went wrong!'},
-                status= status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return token
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer

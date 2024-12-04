@@ -4,7 +4,6 @@ from .models import SinhVien, GiangVien, LopHoc, ThanhVienLop
 User = get_user_model()
 
 
-
 class UserAccountSerializer (serializers.ModelSerializer):
     class Meta:
         model = User

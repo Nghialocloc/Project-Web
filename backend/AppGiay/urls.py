@@ -1,13 +1,14 @@
 from django.urls import path
-from .QuanLyTK import ManageAccount, ManageSingleUser, ChangeAccountState
+from .QuanLyTK import ManageAccount, ManageSingleUser, ChangeAccountState, BlacklistTokenView
 from .QuanLyLopHoc import ManageClassTeacher, ManageClassMember, ManageClassStudent
 
 
 urlpatterns = [
     #QuanLyTK
     path('AdminManageAccount', ManageAccount.as_view()),
-    path('ManageAccount', ManageSingleUser.as_view()),
+    path('AccountInfo', ManageSingleUser.as_view()),
     path('AccountActivation', ChangeAccountState.as_view()),
+    path('Logout', BlacklistTokenView.as_view()),
 
     #QuanLyLopHoc
     path('AdminManageClass', ManageClassTeacher.as_view()),
