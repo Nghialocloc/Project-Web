@@ -36,7 +36,7 @@ def insert_sinhvien(requested_data,Email,accountName,user):
     sdt = requested_data['sdt']
     user_id = user
     
-    student = SinhVien(idsinhvien=sinhvien,tensinhvien=tensinhvien, nganhhoc=nganhhoc,
+    student = SinhVien(idsinhvien=idsinhvien,tensinhvien=tensinhvien, nganhhoc=nganhhoc,
                         diachi=diachi,sdt=sdt,id = user_id)
     student.save()
     
@@ -267,14 +267,14 @@ class ChangeAccountState(APIView):
                 account.is_active = False
                 account.save()
                 return Response(
-                    {'Update success'}, 
+                    {'Update success. Deactivate user'}, 
                     status= status.HTTP_202_ACCEPTED
                 )
             elif (option == 1) :
                 account.is_active = True
                 account.save()
                 return Response(
-                    {'Update success'}, 
+                    {'Update success. Activate user'}, 
                     status= status.HTTP_202_ACCEPTED
                 )
             else :

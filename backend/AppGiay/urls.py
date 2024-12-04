@@ -10,5 +10,9 @@ urlpatterns = [
     path('AccountActivation', ChangeAccountState.as_view()),
 
     #QuanLyLopHoc
+    path('AdminManageClass', ManageClassTeacher.as_view()),
+    path('ManageClass', ManageClassMember.as_view()),
+    path('InfoClass', ManageClassStudent.as_view()),
 
+    #QuanLyDonNghi
 ]

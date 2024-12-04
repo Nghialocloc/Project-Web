@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status, authentication
+from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -31,49 +31,43 @@ class ManageClassTeacher(APIView):
     #Create class
     def post(self, request, format=None):
         try:
+            data = request.data
             user = request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            serializer = LopHocSerializer(data=request.data)
-            giangvien = serializer.data.get('idgiangvien')
+            giangvien = data['idgiangvien']
             if GiangVien.objects.filter(idgiangvien=giangvien).count() == 0:
                 return  Response(
-                        {'error': 'Khong tim thay giang vien'}, 
-                        status= status.HTTP_404_NOT_FOUND
-                    )
+                    {'error': 'Khong tim thay giang vien'}, 
+                    status= status.HTTP_404_NOT_FOUND
+                )
             else: 
-                if serializer.is_valid():
-                    while True:
-                        idlophoc = id_generator(size=6)
-                        if (LopHoc.objects.filter(idlophoc = idlophoc).count() == 0):
-                            break                      
+                while True:
+                    idlophoc = id_generator(size=6)
+                    if (LopHoc.objects.filter(idlophoc = idlophoc).count() == 0):
+                        break                      
                     
-                    tenlophoc = serializer.data.get('tenlophoc') 
-                    mota = serializer.data.get('mota')
-                    cahoc = serializer.data.get('cahoc')
-                    ngayhoc = serializer.data.get('ngayhoc')
-                    kyhoc = serializer.data.get('kyhoc')
-                    maxstudent = serializer.data.get('sosinhvientoida')
-                    trangthai = 0
+                tenlophoc = data['tenlophoc']
+                mota = data['mota']
+                cahoc = data['cahoc']
+                ngayhoc = data['ngayhoc']
+                kyhoc = data['kyhoc']
+                maxstudent = data['sosinhvientoida']
+                trangthai = 0
 
                 
-                    lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, cahoc = cahoc, 
-                                    ngayhoc = ngayhoc, kyhoc = kyhoc, maxstudent = maxstudent, trangthai = trangthai, idgiangvien = giangvien)
-                    lophoc.save()
+                lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, cahoc = cahoc, ngayhoc = ngayhoc, kyhoc = kyhoc, maxstudent = maxstudent, 
+                                trangthai = trangthai, idgiangvien = GiangVien.objects.get(idgiangvien = giangvien))
+                lophoc.save()
                 
-                    return Response(
-                        {"Da luu thong tin lop moi" : LopHocSerializer(lophoc).data},
-                        status=status.HTTP_201_CREATED
-                    )
-                else:
-                    return  Response(
-                        {'error': 'Du lieu dau vao bi thieu hoac sai'}, 
-                        status= status.HTTP_400_BAD_REQUEST
-                    )
+                return Response(
+                    {"Da luu thong tin lop moi" : LopHocSerializer(lophoc).data},
+                    status=status.HTTP_201_CREATED
+                )
 
         except Exception as e:
             traceback.print_exc()
@@ -93,45 +87,48 @@ class ManageClassTeacher(APIView):
                 )
             
             list_class = []
-            user_id = user.data['id']
-            giangvien = GiangVien.objects.get(user_id = user_id)
-            giangvien_id = giangvien.idgiangvien
+            user_id = user.id
+            giangvien = GiangVien.objects.get(id = user_id)
+            idgiangvien = giangvien.idgiangvien
+            tengiangvien = giangvien.tengiangvien
+            tenchucvu = giangvien.tenchucvu
 
-            lopgiangday = LopHoc.objects.filter(idgiangvien = giangvien_id)
-            lopgiangday_seria = LopHocSerializer(data = lopgiangday, many = True)
-            if lopgiangday_seria.is_valid():
-                for group in lopgiangday_seria :
-                    idlophoc = group.data.get('idlophoc')
-                    tenlophoc = group.data.get('tenlophoc')
-                    mota = group.data.get('mota')
-                    cahoc = group.data.get('cahoc')
-                    ngayhoc = group.data.get('ngayhoc')
-                    kyhoc = group.data.get('kyhoc')
-                    maxstudent = group.data.get('maxstudent')
-                    trangthai = group.data.get('status')
+            lopgiangday = LopHoc.objects.filter(idgiangvien = idgiangvien)
+            lopgiangday_seria = LopHocSerializer(lopgiangday, many = True)
+            for group in lopgiangday_seria.data :
+                idlophoc = group.get('idlophoc')
+                tenlophoc = group.get('tenlophoc')
+                mota = group.get('mota')
+                cahoc = group.get('cahoc')
+                ngayhoc = group.get('ngayhoc')
+                kyhoc = group.get('kyhoc')
+                maxstudent = group.get('maxstudent')
+                trangthai = group.get('trangthai')
 
-                    list_class.append(
-                        {
-                            "Ma lop" : idlophoc,
-                            "Ten lop hoc" : tenlophoc,
-                            "Mo ta" : mota,
-                            "Gio bat dau" : cahoc,
-                            "Ngay hoc trong tuan" : ngayhoc,
-                            "Ky hoc" : kyhoc,
-                            "So sinh vien toi da" : maxstudent,
-                            "Trang thai" : trangthai,
-                        }
-                    )
-
-                return Response(
-                    {'Danh sach lop giang day': list_class}, 
-                    status= status.HTTP_200_OK
+                list_class.append(
+                    {
+                        "Ma lop" : idlophoc,
+                        "Ten lop hoc" : tenlophoc,
+                        "Mo ta" : mota,
+                        "Gio bat dau" : cahoc,
+                        "Ngay hoc trong tuan" : ngayhoc,
+                        "Ky hoc" : kyhoc,
+                        "So sinh vien toi da" : maxstudent,
+                        "Trang thai" : trangthai,
+                    }
                 )
-            else:
-                return Response(
-                    {'Du lieu gap su co'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )
+
+            return Response(
+                {
+                    'Thong tin giang vien' : 
+                    {
+                        "Ten giang vien" : tengiangvien,
+                        "Ten chuc vu" : tenchucvu
+                    },
+                    'Danh sach lop giang day': list_class
+                }, 
+                status= status.HTTP_200_OK
+            )
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -143,7 +140,7 @@ class ManageClassTeacher(APIView):
     def put(self, request):
         try: 
             user= request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
@@ -180,10 +177,12 @@ class ManageClassTeacher(APIView):
             lophoc.maxstudent = maxstudent
             lophoc.trangthai = trangthai
             lophoc.save()
-            return JsonResponse(
-                {'Update success'}
-                , safe=False 
-                ,status= status.HTTP_202_ACCEPTED
+
+            lophoc_seria = LopHocSerializer(lophoc)
+
+            return Response(
+                {'Update success': lophoc_seria.data},
+                status= status.HTTP_202_ACCEPTED
             )
         except Exception as e:
             traceback.print_exc()
@@ -196,7 +195,7 @@ class ManageClassTeacher(APIView):
     def delete(self, request):
         try: 
             user= request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
@@ -242,17 +241,17 @@ class ManageClassMember(APIView):
     def post(self, request, format=None):
         try:
             user = request.user
-            if (user.is_teacher) or user.is_active == False:
+            if (user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            data=request.data
+            data = request.data
             sinhvien =  SinhVien.objects.get(id = user.id)
             idlophoc = data['idlophoc']
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
-            if LopHoc.objects.filter(idlophoc = lophoc).count() == 0:
+            if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
                     {'error': 'Khong tim thay lop hoc'}, 
                     status= status.HTTP_404_NOT_FOUND
@@ -263,25 +262,18 @@ class ManageClassMember(APIView):
                     status= status.HTTP_404_NOT_FOUND
                 )
 
-            serializer = ThanhVienLopSerializer(data=request.data)
-            if serializer.is_valid():
-                while True:
-                    idthanhvien = id_generator(size=6)
-                    if (ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0):    
-                        break                      
+            while True:
+                idthanhvien = id_generator(size=6)
+                if (ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0):    
+                    break                      
                 
-                thanhvienlop = ThanhVienLop(idthanhvien = idthanhvien, tinhtranghoc = 0, idsinhvien = sinhvien, idlophoc = idlophoc)
-                thanhvienlop.save()
+            thanhvienlop = ThanhVienLop(idthanhvien = idthanhvien, tinhtranghoc = 0, idsinhvien = sinhvien, idlophoc = lophoc)
+            thanhvienlop.save()
                 
-                return Response(
-                    {"Da dang ky vao lop thanh cong" : ThanhVienLopSerializer(thanhvienlop).data},
-                    status=status.HTTP_201_CREATED
-                )
-            else:     
-                return  Response(
-                    {'error': 'Du lieu dau vao bi thieu hoac sai'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )            
+            return Response(
+                {"Da dang ky vao lop thanh cong" : ThanhVienLopSerializer(thanhvienlop).data},
+                status=status.HTTP_201_CREATED
+            )
 
         except Exception as e:
             traceback.print_exc()
@@ -304,6 +296,10 @@ class ManageClassMember(APIView):
                 )
             
             lopgiangday = LopHoc.objects.get(idlophoc = idlophoc)
+            lopgiangday_seria = LopHocSerializer(lopgiangday)
+            idgiangvien = lopgiangday_seria.data.get('idgiangvien')
+            tengiangvien = GiangVien.objects.get(idgiangvien = idgiangvien).tengiangvien
+
             tenlophoc = lopgiangday.tenlophoc
             mota = lopgiangday.mota
             cahoc = lopgiangday.cahoc
@@ -311,53 +307,47 @@ class ManageClassMember(APIView):
             kyhoc = lopgiangday.kyhoc
             trangthai = lopgiangday.trangthai
 
-            count = 0
-            tengiangvien = GiangVien.objects.get(idgiangvien = lopgiangday.idgiangvien)
-
             thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
-            thanhvien_seria = ThanhVienLopSerializer(data = thanhvienlop, many = True)
-            if thanhvien_seria.is_valid():
-                for group in thanhvien_seria :
-                    idsinhvien = group.data.get('idsinhvien')
-                    sinhvien = SinhVien.objects.get(idsinhvien = idsinhvien)
-                    tensinhvien = sinhvien.tensinhvien
-                    sdt = sinhvien.sdt
+            thanhvien_seria = ThanhVienLopSerializer(thanhvienlop, many = True)
+            
+            count = 0
+            
+            for group in thanhvien_seria.data :
+                idsinhvien = group.get('idsinhvien')
+                sinhvien = SinhVien.objects.get(idsinhvien = idsinhvien)
+                tensinhvien = sinhvien.tensinhvien
+                sdt = sinhvien.sdt
 
-                    tinhtranghoc = group.data.get('tinhtranghoc')
+                tinhtranghoc = group.get('tinhtranghoc')
 
-                    list_class_member.append(
-                        {
-                            "Ma sinh vien" : idsinhvien,
-                            "Ten sinh vien" : tensinhvien,
-                            "So dien thoai" : sdt,
-                            "Tinh trang hoc" : tinhtranghoc
-                        }
-                    )
-
-                    count = count + 1
-
-                return Response(
+                list_class_member.append(
                     {
-                        'Thong tin chi tiet' : {
-                            "Ma lop hoc " : idlophoc,
-                            "Ten lop hoc" : tenlophoc,
-                            "Ten giang vien" : tengiangvien,
-                            "Mo ta" : mota,
-                            "Gio bat dau" : cahoc,
-                            "Ngay hoc" : ngayhoc,
-                            "Ky hoc" : kyhoc,
-                            "So sinh vien " : count,
-                            "Trang thai lop" : trangthai 
-                        },
-                        'Danh sach thanhvien': list_class_member
-                    }, 
-                    status= status.HTTP_200_OK
+                        "Ma sinh vien" : idsinhvien,
+                        "Ten sinh vien" : tensinhvien,
+                        "So dien thoai" : sdt,
+                        "Tinh trang hoc" : tinhtranghoc
+                    }
                 )
-            else:
-                return Response(
-                    {'Du lieu gap su co'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )
+
+                count = count + 1
+
+            return Response(
+                {
+                    'Thong tin chi tiet' : {
+                        "Ma lop hoc " : idlophoc,
+                        "Ten lop hoc" : tenlophoc,
+                        "Ten giang vien" : tengiangvien,
+                        "Mo ta" : mota,
+                        "Gio bat dau" : cahoc,
+                        "Ngay hoc" : ngayhoc,
+                        "Ky hoc" : kyhoc,
+                        "So sinh vien " : count,
+                        "Trang thai lop" : trangthai 
+                    },
+                    'Danh sach thanhvien': list_class_member
+                }, 
+                status= status.HTTP_200_OK
+            )
             
         except Exception as e:
             traceback.print_exc()
@@ -379,17 +369,15 @@ class ManageClassMember(APIView):
             data=request.data
             idthanhvien = data['idthanhvien']
             if ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0:
-                return JsonResponse(
+                return Response(
                     {'error': 'No matching data'}
-                    ,safe=False 
-                    ,status= status.HTTP_204_NO_CONTENT
+                    ,status= status.HTTP_404_NOT_FOUND
                 )
             
             tinhtranghoc = data['tinhtranghoc']
             if tinhtranghoc < 0 or tinhtranghoc > 3:
-                return JsonResponse(
+                return Response(
                     {'error': 'Mismatch data. Please check with the admin'}
-                    ,safe=False 
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             
@@ -397,11 +385,11 @@ class ManageClassMember(APIView):
             thanhvienlop.tinhtranghoc = tinhtranghoc
             thanhvienlop.save()
 
-            return JsonResponse(
+            return Response(
                 {'Update success'}
-                , safe=False 
                 ,status= status.HTTP_202_ACCEPTED
             )
+        
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -454,54 +442,50 @@ class ManageClassStudent(APIView):
     def get(self, request):
         try:
             user = request.user
-            if (user.is_teacher) or user.is_active == False:
+            if (user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
             list_class = []
-            user_id = user.data['id']
-            sinhvien = SinhVien.objects.get(user_id = user_id)
+            user_id = user.id
+            sinhvien = SinhVien.objects.get(id = user_id)
             sinhvien_id = sinhvien.idsinhvien
 
             lopdangky = ThanhVienLop.objects.filter(idsinhvien = sinhvien_id)
-            lopdangky_seria = ThanhVienLopSerializer(data = lopdangky, many = True)
-            if lopdangky_seria.is_valid():
-                for group in lopdangky_seria :
-                    idlophoc = group.data.get('idlophoc')
-                    tinhtranghoc = group.data.get('tinhtranghoc')
-                    lophoc = LopHoc.objects.get(idlophoc = idlophoc)
-                    tenlophoc = lophoc.tenlophoc
-                    mota = lophoc.mota
-                    cahoc = lophoc.cahoc
-                    ngayhoc = lophoc.ngayhoc
-                    kyhoc = lophoc.kyhoc
+            lopdangky_seria = ThanhVienLopSerializer(lopdangky, many = True)
+            for group in lopdangky_seria.data :
+                idlophoc = group.get('idlophoc')
+                tinhtranghoc = group.get('tinhtranghoc')
+                lophoc = LopHoc.objects.get(idlophoc = idlophoc)
+                tenlophoc = lophoc.tenlophoc
+                mota = lophoc.mota
+                cahoc = lophoc.cahoc
+                ngayhoc = lophoc.ngayhoc
+                kyhoc = lophoc.kyhoc
 
-                    tengiangvien = GiangVien.objects.get(idgiangvien = lophoc.idgiangvien)
+                lopgiangday_seria = LopHocSerializer(lophoc)
+                idgiangvien = lopgiangday_seria.data.get('idgiangvien')
+                tengiangvien = GiangVien.objects.get(idgiangvien = idgiangvien).tengiangvien
 
-                    list_class.append(
-                        {
-                            "Ma lop" : idlophoc,
-                            "Ten lop hoc" : tenlophoc,
-                            "Ten giang vien" : tengiangvien,
-                            "Mo ta" : mota,
-                            "Gio bat dau" : cahoc,
-                            "Ngay hoc" : ngayhoc,
-                            "Ky hoc" : kyhoc,
-                            "Trang thai" : tinhtranghoc
-                        }
-                    )
-
-                return Response(
-                    {'Danh sach lop dang ky': list_class}, 
-                    status= status.HTTP_200_OK
+                list_class.append(
+                    {
+                        "Ma lop" : idlophoc,
+                        "Ten lop hoc" : tenlophoc,
+                        "Ten giang vien" : tengiangvien,
+                        "Mo ta" : mota,
+                        "Gio bat dau" : cahoc,
+                        "Ngay hoc" : ngayhoc,
+                        "Ky hoc" : kyhoc,
+                        "Trang thai" : tinhtranghoc
+                    }
                 )
-            else:
-                return Response(
-                    {'Du lieu gap su co'}, 
-                    status= status.HTTP_400_BAD_REQUEST
-                )
+
+            return Response(
+                {'Danh sach lop dang ky': list_class}, 
+                status= status.HTTP_200_OK
+            )
             
         except Exception as e:
             traceback.print_exc()

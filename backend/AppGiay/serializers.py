@@ -23,10 +23,10 @@ class SinhVienSerializer(serializers.ModelSerializer):
 class LopHocSerializer(serializers.ModelSerializer):
     class Meta:
         model = LopHoc
-        fields = ( 'idlophoc','tenlophoc', 'mota', 'cahoc', 'ngayhoc', 'kyhoc', 'maxstudent', 'status','idgiangvien',)
+        fields = ( 'idlophoc','tenlophoc', 'mota', 'cahoc', 'ngayhoc', 'kyhoc', 'maxstudent', 'trangthai','idgiangvien',)
 
 class ThanhVienLopSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThanhVienLop
-        fields = ( 'idthanhvien','tinhtranglop', 'idsinhvien','idlophoc',)
+        fields = ( 'idthanhvien','tinhtranghoc', 'idsinhvien','idlophoc',)
 
