@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import SinhVien, GiangVien, LopHoc, ThanhVienLop
+from .models import SinhVien, GiangVien, LopHoc, ThanhVienLop, DonXinNghi
 User = get_user_model()
 
 
@@ -29,3 +29,7 @@ class ThanhVienLopSerializer(serializers.ModelSerializer):
         model = ThanhVienLop
         fields = ( 'idthanhvien','tinhtranghoc', 'idsinhvien','idlophoc',)
 
+class DonXinNghiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DonXinNghi
+        fields = ( 'iddon','idthanhvien', 'ngayxinnghi','lydo', 'trangthai', 'thoigiangui', 'thoigianphanhoi',)

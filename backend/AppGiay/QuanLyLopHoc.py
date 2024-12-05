@@ -80,7 +80,7 @@ class ManageClassTeacher(APIView):
     def get(self, request):
         try:
             user = request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
@@ -154,6 +154,7 @@ class ManageClassTeacher(APIView):
                     ,safe=False 
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
+            
             idgiangvien =  data['idgiangvien']
             if GiangVien.objects.filter(idgiangvien = idgiangvien).count() == 0:
                 return  Response(
@@ -360,7 +361,7 @@ class ManageClassMember(APIView):
     def put(self, request):
         try: 
             user= request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
