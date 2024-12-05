@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, authentication
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 import traceback
 import random, string
 import datetime
-
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
@@ -269,8 +268,25 @@ class ChangeAccountState(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+from ProjectBanGiay.view import MyTokenObtainPairSerializer, MyTokenObtainPairView
 
-class BlacklistTokenView(APIView):
+class LoginView(MyTokenObtainPairView):
+    permission_classes = (permissions.AllowAny, )
+
+    #Login
+    serializer_class = MyTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+            return response
+        except Exception as e:
+            return Response({
+            'error': True,
+            'message': 'Invalid Username or Password',
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutView(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
