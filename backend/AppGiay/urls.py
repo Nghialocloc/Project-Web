@@ -1,6 +1,7 @@
 from django.urls import path
 from .QuanLyTK import ManageAccount, ManageSingleUser, ChangeAccountState, LogoutView, LoginView
 from .QuanLyLopHoc import ManageClassTeacher, ManageClassMember, ManageClassStudent
+from .QuanLyDonNghi import ManageAbsenceForm
 
 
 urlpatterns = [
@@ -14,7 +15,8 @@ urlpatterns = [
     #QuanLyLopHoc
     path('AdminManageClass', ManageClassTeacher.as_view()),
     path('ManageClass', ManageClassMember.as_view()),
-    path('InfoClass', ManageClassStudent.as_view()),
+    path('ClassInfo', ManageClassStudent.as_view()),
 
     #QuanLyDonNghi
+    path('ManageAbsence', ManageAbsenceForm.as_view()),
 ]

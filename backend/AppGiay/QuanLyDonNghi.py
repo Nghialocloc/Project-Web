@@ -16,9 +16,9 @@ def get_member_id(sinhvien, lophoc):
     thanhvien = ThanhVienLop.objects.get(idsinhvien = sinhvien, idlophoc = lophoc)
     return thanhvien.idthanhvien
 
-# Create your views here.
-def is_valid_param(param) :
-    return param != " " and param is not None and param != ""
+
+def is_past_due(self):
+    return datetime.date.today() > self
 
 
 def id_generator (size, chars=string.digits):
@@ -51,7 +51,7 @@ class ManageAbsenceForm(APIView):
             
             else: 
                 while True:
-                    iddon = id_generator(size=10)
+                    iddon = id_generator(size=8)
                     if (DonXinNghi.objects.filter(iddon = iddon).count() == 0):
                         break                      
                 
@@ -61,20 +61,20 @@ class ManageAbsenceForm(APIView):
                 trangthai = 0
                 thoigiangui = datetime.datetime.now()
 
-                hientai = datetime.date.today()
-
-                if ngayxinnghi < hientai:
-                    return Response(
-                        {"Thong tin ngay da qua han. Vui long nhap lai"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                # if is_past_due(ngayxinnghi) == True:
+                #     return Response(
+                #         {"Thong tin ngay da qua han. Vui long nhap lai"},
+                #         status=status.HTTP_400_BAD_REQUEST
+                #     )
                 
-                donnghi = DonXinNghi(iddon = iddon, idthanhvien = idthanhvien, ngayxinnghi = ngayxinnghi, lydo = lydo,
-                                     trangthai = trangthai, thoigiangui = thoigiangui)
+                donnghi = DonXinNghi(iddon = iddon, idthanhvien = ThanhVienLop.objects.get(idthanhvien = idthanhvien), ngayxinnghi = ngayxinnghi, 
+                                     lydo = lydo, trangthai = trangthai, thoigiangui = thoigiangui)
                 donnghi.save()
+
+                donnghi_seria = DonXinNghiSerializer(donnghi)
                 
                 return Response(
-                    {"Da gui don len he thong"},
+                    {"Da gui don len he thong" : donnghi_seria.data},
                     status=status.HTTP_201_CREATED
                 )
 
@@ -89,7 +89,7 @@ class ManageAbsenceForm(APIView):
     def put(self, request):
         try: 
             user= request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {'error': 'User does not have necessary permission' }, 
                     status=status.HTTP_403_FORBIDDEN
@@ -102,16 +102,37 @@ class ManageAbsenceForm(APIView):
                     {'error': 'No matching data'}
                     ,status= status.HTTP_404_NOT_FOUND
                 )
-            
+
             trangthai = data['trangthai']
             thoigianphanhoi = datetime.datetime.now()
             donnghi = DonXinNghi.objects.get(iddon = iddon)
+            
+            donnghi_seria = DonXinNghiSerializer(donnghi)
+            idthanhvien = donnghi_seria.data.get('idthanhvien')
+            thanhvien = ThanhVienLop.objects.get(idthanhvien = idthanhvien)
+
+            thanhvien_seria = ThanhVienLopSerializer(thanhvien)
+            idlophoc = thanhvien_seria.data.get('idlophoc')
+            lophoc = LopHoc.objects.get(idlophoc = idlophoc)
+
+            lophoc_seria = LopHocSerializer(lophoc)
+            idgiangvien = lophoc_seria.data.get('idgiangvien')
+
+            giangvien = GiangVien.objects.get(id = user.id)
+            if giangvien.idgiangvien != idgiangvien:
+                return Response(
+                    {'error': 'Lop khong thuoc quan li giang vien'}
+                    ,status= status.HTTP_403_FORBIDDEN
+                )
+
             donnghi.trangthai = trangthai
             donnghi.thoigianphanhoi = thoigianphanhoi
             donnghi.save()
 
+            donnghi_seria = DonXinNghiSerializer(donnghi)
+
             return Response(
-                {'Update success'}
+                {'Update success': donnghi_seria.data}
                 ,status= status.HTTP_202_ACCEPTED
             )
         
@@ -145,6 +166,7 @@ class ManageAbsenceForm(APIView):
                     {'error': 'No matching data. Lop khong ton tai hoac khong thuoc quyen cua giang vien'}
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
+            
             lophoc  = LopHoc.objects.get(idgiangvien = idgiangvien, idlophoc = idlophoc)
             tenlophoc = lophoc.tenlophoc
             

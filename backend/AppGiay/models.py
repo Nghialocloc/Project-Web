@@ -235,7 +235,7 @@ class ThanhVienLop(models.Model):
 class DonXinNghi(models.Model):
     iddon = models.AutoField(db_column='IDDon', primary_key=True)  # Field name made lowercase.
     idthanhvien = models.ForeignKey('ThanhVienLop', models.CASCADE, db_column='IDThanhVien') # Field name made lowercase.
-    ngayxinnghi = models.DateTimeField(db_column='NgayXinNghi') # Field name made lowercase.
+    ngayxinnghi = models.DateField(db_column='NgayXinNghi') # Field name made lowercase.
     lydo = models.CharField(db_column='Lydo', max_length=300)  # Field name made lowercase.
     trangthai = models.SmallIntegerField(db_column='TrangThai', db_comment=' Đang xét duyệt = 0, Chấp nhập = 1, Từ chối = 2')  # Field name made lowercase.
     thoigiangui = models.DateTimeField(db_column='ThoigianGui') # Field name made lowercase.
