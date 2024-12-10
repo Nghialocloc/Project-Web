@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status, authentication
+from rest_framework import generics, permissions, status
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +11,8 @@ import traceback
 import random, string
 import datetime
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+JWT_authenticator = JWTAuthentication()
 
 User = get_user_model()
 
@@ -84,14 +86,17 @@ class ManageAccount(APIView):
             is_teacher = data['is_teacher']
             
             if password ==  re_password:
-                if len(password) >= 8:
+                if len(password) < 6 or len(password) > 12:
                     if not UserAccount.objects.filter(email=email).exists():
                         if not is_teacher:
                             student = User.objects.create_student(email = email, accountname=accountname, sex = gioitinh, 
                                                                   brithday = ngaysinh, joined = date_joined, password=password)
                             insert_sinhvien(requested_data=data,Email=email,accountName=accountname,user=student)
                             return Response(
-                                {"success": "User successfully created"},
+                                {
+                                    'code': "1000",
+                                    'message' : "OK"
+                                },
                                 status= status.HTTP_201_CREATED
                             )
                         else: 
@@ -99,25 +104,37 @@ class ManageAccount(APIView):
                                                                   brithday = ngaysinh, joined = date_joined, password=password)
                             insert_giangvien(requested_data=data,Email=email,accountName=accountname,user=teacher)
                             return Response(
-                                {"success": "User successfully created"},
+                                {
+                                    'code': "1000",
+                                    'message' : "OK"
+                                },
                                 status= status.HTTP_201_CREATED
                             )
                     else:
                         return Response(
-                        {'error': 'Email already exist'},
-                        status= status.HTTP_400_BAD_REQUEST
-                        )
+                            {
+                                'code': "9996",
+                                'message' : "User has already exsit"
+                            },
+                            status= status.HTTP_400_BAD_REQUEST
+                            )
                 else:
                     return Response(
-                    {'error': 'Password must have more than 8 character'},
-                    status= status.HTTP_400_BAD_REQUEST
-                    )
+                        {
+                            'code' : "1004",
+                            'messsage': "Password must have more than 6 character and less than 10 character"
+                        },
+                        status= status.HTTP_400_BAD_REQUEST
+                        )
                     
             else:
                 return Response(
-                    {'error': 'Password do not match'},
+                    {
+                        'code' : "1004",
+                        'messsage': 'Password do not match'
+                    },
                     status= status.HTTP_400_BAD_REQUEST
-                )
+                    )
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -129,9 +146,12 @@ class ManageAccount(APIView):
     def get(self, request):
         try:
             user= request.user
-            if ( not user.is_teacher ) or user.is_active == False:
+            if ( not user.is_teacher ):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : "1009",
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
             )
 
@@ -153,9 +173,12 @@ class ManageAccount(APIView):
     def put(self, request):
         try: 
             user= request.user
-            if ( not user.is_teacher ) or user.is_active == False:
+            if ( not user.is_teacher ):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : "1009",
+                        'message': 'User does not have necessary permission' 
+                    },
                     status=status.HTTP_403_FORBIDDEN
             )
 
@@ -172,7 +195,10 @@ class ManageAccount(APIView):
                 account.save()
                 user_seria = UserAccountSerializer(account)
                 return Response(
-                    {'Update success': user_seria.data}, 
+                    {
+                        'code' : 1000,
+                        'message': "Update success"
+                    }, 
                     status= status.HTTP_202_ACCEPTED
                 )
         except Exception as e:
@@ -183,32 +209,83 @@ class ManageAccount(APIView):
             )
 
 
-class ManageSingleUser(APIView):
+class ChangeInfo(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
     #Get single user info
     def get(self, request, format=None):
         try:
-            user = request.user
-            user_seria = UserAccountSerializer(user)
-            user_id = user.id
-            
-            if not user.is_teacher:
-                user_detail = SinhVien.objects.get(id = user_id) 
-                detail = SinhVienSerializer(user_detail)
-            else:
-                user_detail = GiangVien.objects.get(id = user_id)
-                detail = GiangVienSerializer(user_detail)
+            data = request.data
 
-            return Response(
-                {
-                    'user': user_seria.data,
-                    'detail': detail.data
-                 },
-                status=status.HTTP_200_OK
-            )
-            
+            option = data['option']
+
+            if option == 0:
+                user_id = data["user_id"]
+                if is_valid_param(user_id) == False or UserAccount.objects.filter(id = user_id).count() == 0:
+                    return Response(
+                        {
+                            'code' : 9995,
+                            'message' : "User not found. Please check input again", 
+                        }, 
+                        status=status.HTTP_403_FORBIDDEN
+                )
+
+                user = UserAccount.objects.get(id = user_id)
+
+                if not user.is_teacher:
+                    user_detail = SinhVien.objects.get(id = user_id) 
+                    detail = SinhVienSerializer(user_detail)
+                else:
+                    user_detail = GiangVien.objects.get(id = user_id)
+                    detail = GiangVienSerializer(user_detail)
+
+                return Response(
+                    {
+                        'code' : 1000,
+                        'message' : "OK",
+                        'user': 
+                        {
+                            "username" : user.accountname,
+                            "email" : user.email
+                        }
+                        ,'detail': detail.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            elif option == 1:
+                user = request.user
+                user_id = user.id
+
+                if not user.is_teacher:
+                    user_detail = SinhVien.objects.get(id = user_id) 
+                    detail = SinhVienSerializer(user_detail)
+                else:
+                    user_detail = GiangVien.objects.get(id = user_id)
+                    detail = GiangVienSerializer(user_detail)
+
+                return Response(
+                    {
+                        'code' : 1000,
+                        'message' : "OK",
+                        'user': 
+                        {
+                            "username" : user.accountname,
+                            "email" : user.email
+                        }
+                        ,'detail': detail.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {
+                        'code' : 1004,
+                        'message' : "Out of bound. Please check input data option value",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         except Exception as e:
             traceback.print_exc()
             return Response(
@@ -225,9 +302,12 @@ class ChangeAccountState(APIView):
     def put(self, request):
         try: 
             user= request.user
-            if ( not user.is_teacher ) or user.is_active == False:
+            if ( not user.is_teacher ):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    },
                     status=status.HTTP_403_FORBIDDEN
             )
 
@@ -235,7 +315,10 @@ class ChangeAccountState(APIView):
             option = request.data['option']
             if User.objects.filter(id = number).count() == 0:
                 return  Response(
-                    {'error': 'Khong tim thay user'}, 
+                    {
+                        'code' : 9995,
+                        'message' : "User not found",
+                    }, 
                     status= status.HTTP_404_NOT_FOUND
                 )
 
@@ -245,19 +328,28 @@ class ChangeAccountState(APIView):
                 account.is_active = False
                 account.save()
                 return Response(
-                    {'Update success. Deactivate user'}, 
+                    {
+                        'code' : 1000,
+                        'message' : 'Update success. Deactivate user'
+                    }, 
                     status= status.HTTP_202_ACCEPTED
                 )
             elif (option == 1) :
                 account.is_active = True
                 account.save()
                 return Response(
-                    {'Update success. Activate user'}, 
+                    {
+                        'code' : 1000,
+                        'message' : 'Update success. Activate user'
+                    },  
                     status= status.HTTP_202_ACCEPTED
                 )
             else :
                 return Response(
-                    {'error': 'Index out of bound'}, 
+                    {
+                        'code' : 1004,
+                        'message' : "Out of bound. Please check input data option value",
+                    },
                     status= status.HTTP_400_BAD_REQUEST
                 )
 
@@ -278,13 +370,37 @@ class LoginView(MyTokenObtainPairView):
     
     def post(self, request, *args, **kwargs):
         try:
+            email = request.data['email']
+            password = request.data['password']
+            if is_valid_param(email) == False or is_valid_param(password) == False:
+                return Response(
+                    {
+                        'code': 1004,
+                        'message': 'Parameter is null',
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            if UserAccount.objects.filter(email = email). count() == 0:
+                return Response(
+                    {
+                        'code': 9995,
+                        'message': 'User not found',
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
             response = super().post(request, *args, **kwargs)
             return response
+
         except Exception as e:
-            return Response({
-            'error': True,
-            'message': 'Invalid Username or Password',
-        }, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {
+                    'code': 1004,
+                    'message': 'Invalid Password',
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+                )
+
 
 class LogoutView(APIView):
 
@@ -299,14 +415,53 @@ class LogoutView(APIView):
                 re_token = RefreshToken(request.data.get('refresh'))
                 re_token.blacklist()
                 return Response(
-                    {"Message" : "User has been logout"}, 
+                    {
+                        "code" : 1000,
+                        "message" : "User has been logout"
+                    }, 
                     status=status.HTTP_200_OK
                 )
             else:
                 return Response(
-                    {"Message" : "User not found or not vaild"}, 
+                    {
+                        "code" : 9995,
+                        "message" : "User not found or not vaild"
+                    }, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong'},
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class VerifyToken(APIView):
+    permission_classes = (permissions.AllowAny, )
+
+     #Verify
+    def post(self, request):
+        try:
+            jwt_object  = JWT_authenticator
+            header          = jwt_object.get_header(request)
+            raw_token       = jwt_object.get_raw_token(header)
+            validated_token = jwt_object.get_validated_token(raw_token)
+            user  = jwt_object.get_user(validated_token)
+
+
+            return Response(
+                {
+                    'code': 1000,
+                    'message' : "OK",
+                    'data' : 
+                    {
+                        "id" : user.id,
+                        "token" : validated_token.payload,
+                        "active" : user.is_active
+                    }
+                }
+            )
         except Exception as e:
             traceback.print_exc()
             return Response(

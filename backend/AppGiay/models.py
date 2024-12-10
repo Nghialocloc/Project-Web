@@ -214,6 +214,8 @@ class LopHoc(models.Model):
     kyhoc = models.CharField(db_column='Ky hoc', max_length=7)  # Field name made lowercase.
     maxstudent =  models.SmallIntegerField(db_column='SoSinhVienToiDa', default= 100)  # Field name made lowercase.
     trangthai = models.SmallIntegerField(db_column='TrangThai', db_comment=' Đang đăng ký = 0, Đang hoạt động = 1, Đã kết thúc = 2')  # Field name made lowercase.
+    start_day = models.DateField(db_column='NgayBatDau')  # Field name made lowercase.
+    end_day = models.DateField(db_column='NgayKetThuc')  # Field name made lowercase.
     idgiangvien = models.ForeignKey('GiangVien',on_delete = models.CASCADE, db_column='IDGiangVien') # Field name made lowercase.
 
     class Meta:

@@ -15,7 +15,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             sinhvien = SinhVien.objects.get(id= user.id)
             token['idsinhvien'] = sinhvien.idsinhvien
-            token['tengiangvien'] = sinhvien.tensinhvien
+            token['tensinhvien'] = sinhvien.tensinhvien
         
         return token
 

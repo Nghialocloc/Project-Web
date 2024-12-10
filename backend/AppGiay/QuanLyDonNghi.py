@@ -36,7 +36,10 @@ class ManageAbsenceForm(APIView):
             user = request.user
             if (user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -45,7 +48,10 @@ class ManageAbsenceForm(APIView):
             idlophoc = data['idlophoc']
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
-                    {'error': 'Loi du lieu. Khong tim thay thong tin lop.'}, 
+                    {
+                        'code' : 1004,
+                        'message': 'Class not found. Please check id input' 
+                    }, 
                     status= status.HTTP_404_NOT_FOUND
                 )
             
@@ -61,20 +67,24 @@ class ManageAbsenceForm(APIView):
                 trangthai = 0
                 thoigiangui = datetime.datetime.now()
 
-                # if is_past_due(ngayxinnghi) == True:
-                #     return Response(
-                #         {"Thong tin ngay da qua han. Vui long nhap lai"},
-                #         status=status.HTTP_400_BAD_REQUEST
-                #     )
+                if ngayxinnghi < str(thoigiangui):
+                    return Response(
+                        {
+                            'code' : 1004,
+                            'message': "Absence day had passed. Please input again."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 
                 donnghi = DonXinNghi(iddon = iddon, idthanhvien = ThanhVienLop.objects.get(idthanhvien = idthanhvien), ngayxinnghi = ngayxinnghi, 
                                      lydo = lydo, trangthai = trangthai, thoigiangui = thoigiangui)
                 donnghi.save()
-
-                donnghi_seria = DonXinNghiSerializer(donnghi)
                 
                 return Response(
-                    {"Da gui don len he thong" : donnghi_seria.data},
+                    {
+                        'code': 1000,
+                        'meassage': "OK"
+                    },
                     status=status.HTTP_201_CREATED
                 )
 
@@ -91,7 +101,10 @@ class ManageAbsenceForm(APIView):
             user= request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -99,7 +112,10 @@ class ManageAbsenceForm(APIView):
             iddon = data['iddon']
             if DonXinNghi.objects.filter(iddon = iddon).count() == 0:
                 return Response(
-                    {'error': 'No matching data'}
+                    {
+                        'code' : 1005,
+                        'message': 'Form not found. Please check input again.' 
+                    }
                     ,status= status.HTTP_404_NOT_FOUND
                 )
 
@@ -121,8 +137,11 @@ class ManageAbsenceForm(APIView):
             giangvien = GiangVien.objects.get(id = user.id)
             if giangvien.idgiangvien != idgiangvien:
                 return Response(
-                    {'error': 'Lop khong thuoc quan li giang vien'}
-                    ,status= status.HTTP_403_FORBIDDEN
+                    {
+                        'code' : 1009,
+                        'message': 'This teacher doesn"t manage this class and have necessary permission' 
+                    }, 
+                    status= status.HTTP_403_FORBIDDEN
                 )
 
             donnghi.trangthai = trangthai
@@ -132,7 +151,11 @@ class ManageAbsenceForm(APIView):
             donnghi_seria = DonXinNghiSerializer(donnghi)
 
             return Response(
-                {'Update success': donnghi_seria.data}
+                {
+                    'code' : 1000,
+                    'message': 'OK',
+                    'Thong tin sau khi sua' : donnghi_seria.data
+                }
                 ,status= status.HTTP_202_ACCEPTED
             )
         
@@ -150,7 +173,10 @@ class ManageAbsenceForm(APIView):
             user = request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -163,7 +189,10 @@ class ManageAbsenceForm(APIView):
             idlophoc = data['idlophoc']
             if LopHoc.objects.filter(idgiangvien = idgiangvien, idlophoc = idlophoc).count() == 0:
                 return Response(
-                    {'error': 'No matching data. Lop khong ton tai hoac khong thuoc quyen cua giang vien'}
+                    {
+                        'code' : 1009,
+                        'message': 'Class not found. Please try again.' 
+                    }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             
@@ -213,6 +242,8 @@ class ManageAbsenceForm(APIView):
 
             return Response(
                 {
+                    'code' : 1000,
+                    'message' : "OK",
                     'Thong tin lop hoc' : 
                     {
                         "Id lop hoc" : idlophoc,

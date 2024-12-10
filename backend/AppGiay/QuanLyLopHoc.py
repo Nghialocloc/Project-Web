@@ -35,14 +35,20 @@ class ManageClassTeacher(APIView):
             user = request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
             giangvien = data['idgiangvien']
             if GiangVien.objects.filter(idgiangvien=giangvien).count() == 0:
                 return  Response(
-                    {'error': 'Khong tim thay giang vien'}, 
+                    {
+                        'code' : 1004,
+                        'message': 'Teacher id not found'
+                    }, 
                     status= status.HTTP_404_NOT_FOUND
                 )
             else: 
@@ -58,14 +64,45 @@ class ManageClassTeacher(APIView):
                 kyhoc = data['kyhoc']
                 maxstudent = data['sosinhvientoida']
                 trangthai = 0
+                start_day = data['batdau']
+                end_day = data['ketthuc']
 
+                if is_valid_param(tenlophoc) == False or len(tenlophoc) > 50:
+                    return  Response(
+                        {
+                            'code' : 1004,
+                            'message': 'Class name is invalid. Please input name again.'
+                        }, 
+                        status= status.HTTP_404_NOT_FOUND
+                    )
                 
+                if is_valid_param(maxstudent) == False or maxstudent > 200:
+                    return  Response(
+                        {
+                            'code' : 1004,
+                            'message': 'Max student is invalid or bigger than 200. Please input again.'
+                        }, 
+                        status= status.HTTP_404_NOT_FOUND
+                    )
+                
+                if start_day > end_day:
+                    return  Response(
+                        {
+                            'code' : 1004,
+                            'message': 'The start day must before the end day.'
+                        }, 
+                        status= status.HTTP_404_NOT_FOUND
+                    )
+
                 lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, cahoc = cahoc, ngayhoc = ngayhoc, kyhoc = kyhoc, maxstudent = maxstudent, 
-                                trangthai = trangthai, idgiangvien = GiangVien.objects.get(idgiangvien = giangvien))
+                                trangthai = trangthai, start_day = start_day, end_day = end_day,idgiangvien = GiangVien.objects.get(idgiangvien = giangvien))
                 lophoc.save()
                 
                 return Response(
-                    {"Da luu thong tin lop moi" : LopHocSerializer(lophoc).data},
+                    {
+                        "code" : 1000,
+                        "message" : "OK"
+                    },
                     status=status.HTTP_201_CREATED
                 )
 
@@ -82,7 +119,10 @@ class ManageClassTeacher(APIView):
             user = request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -102,8 +142,11 @@ class ManageClassTeacher(APIView):
                 cahoc = group.get('cahoc')
                 ngayhoc = group.get('ngayhoc')
                 kyhoc = group.get('kyhoc')
-                maxstudent = group.get('maxstudent')
                 trangthai = group.get('trangthai')
+                ngaybatdau = group.get('start_day')
+                ngayketthuc = group.get('end_day')
+
+                studentcount = ThanhVienLop.objects.filter(idlophoc = idlophoc).count()
 
                 list_class.append(
                     {
@@ -113,13 +156,17 @@ class ManageClassTeacher(APIView):
                         "Gio bat dau" : cahoc,
                         "Ngay hoc trong tuan" : ngayhoc,
                         "Ky hoc" : kyhoc,
-                        "So sinh vien toi da" : maxstudent,
+                        "So luong sinh vien" : studentcount,
                         "Trang thai" : trangthai,
+                        "Ngay bat dau" : ngaybatdau,
+                        "Ngay ket thuc" : ngayketthuc,
                     }
                 )
 
             return Response(
                 {
+                    'code' : "1000",
+                    'message' : "OK",
                     'Thong tin giang vien' : 
                     {
                         "Ten giang vien" : tengiangvien,
@@ -142,7 +189,10 @@ class ManageClassTeacher(APIView):
             user= request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -150,39 +200,36 @@ class ManageClassTeacher(APIView):
             idlophoc = data['idlophoc']
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return JsonResponse(
-                    {'error': 'No matching'}
-                    ,safe=False 
+                    {
+                        'code' : 1004,
+                        'message': 'Class not found. Please try again.'
+                    }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             
-            idgiangvien =  data['idgiangvien']
-            if GiangVien.objects.filter(idgiangvien = idgiangvien).count() == 0:
-                return  Response(
-                    {'error': 'Khong tim thay giang vien'}, 
-                    status= status.HTTP_404_NOT_FOUND
-                )
             tenlophoc = data['tenlophoc']
             mota = data['mota']
             cahoc = data['cahoc']
-            ngayhoc = data['ngayhoc']
-            kyhoc = data['kyhoc']
             maxstudent = data['sosinhvientoida']
             trangthai = data['trangthai']
+            ngaybatdau = data['ngaybatdau']
+            ngayketthuc = data['ngayketthuc']
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             lophoc.tenlophoc = tenlophoc
             lophoc.mota = mota
             lophoc.cahoc = cahoc
-            lophoc.ngayhoc = ngayhoc
-            lophoc.kyhoc = kyhoc
             lophoc.maxstudent = maxstudent
             lophoc.trangthai = trangthai
+            lophoc.start_day = ngaybatdau
+            lophoc.end_day = ngayketthuc
             lophoc.save()
 
-            lophoc_seria = LopHocSerializer(lophoc)
-
             return Response(
-                {'Update success': lophoc_seria.data},
+                {
+                    'code' : 1000,
+                    'message': "Update success"
+                },
                 status= status.HTTP_202_ACCEPTED
             )
         except Exception as e:
@@ -198,7 +245,10 @@ class ManageClassTeacher(APIView):
             user= request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -206,10 +256,13 @@ class ManageClassTeacher(APIView):
             idlophoc = data['idlophoc']
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return JsonResponse(
-                    {'error': 'No matching'}
-                    ,safe=False 
+                    {
+                        'code' : 1004,
+                        'message': 'Class not found. Please try again.'
+                    }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
+
             else:
                 list_thanhvien = ThanhVienLop.objects.filter(idlophoc = idlophoc)
                 if list_thanhvien.count() != 0:
@@ -221,10 +274,12 @@ class ManageClassTeacher(APIView):
                 lophoc.delete()
 
                 return JsonResponse(
-                    {'Result': 'Delete successful'}
-                    ,safe=False 
-                    ,status= status.HTTP_202_ACCEPTED
-                )        
+                    {
+                        'code' : 1000,
+                        'message': 'Ok.'
+                    }
+                    ,status= status.HTTP_200_OK
+                ) 
 
         except Exception as e:
             traceback.print_exc()
@@ -244,7 +299,10 @@ class ManageClassMember(APIView):
             user = request.user
             if (user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
 
@@ -254,12 +312,18 @@ class ManageClassMember(APIView):
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
-                    {'error': 'Khong tim thay lop hoc'}, 
+                    {
+                        'code' : 1004,
+                        'message': 'Class not found. Please check input'
+                    }, 
                     status= status.HTTP_404_NOT_FOUND
                 )
             elif lophoc.trangthai != 0:
                 return  Response(
-                    {'error': 'Lớp đã quá thời hạn đăng ký'}, 
+                    {
+                        'code' : 1004,
+                        'message': 'Lớp đã quá thời hạn đăng ký'
+                    }, 
                     status= status.HTTP_404_NOT_FOUND
                 )
 
@@ -272,7 +336,10 @@ class ManageClassMember(APIView):
             thanhvienlop.save()
                 
             return Response(
-                {"Da dang ky vao lop thanh cong" : ThanhVienLopSerializer(thanhvienlop).data},
+                {
+                    'code' : 1000,
+                    'message' : "Da dang ky vao lop thanh cong",
+                },
                 status=status.HTTP_201_CREATED
             )
 
@@ -292,7 +359,10 @@ class ManageClassMember(APIView):
             idlophoc = data['idlophoc']
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
-                    {'error': 'Khong tim thay lop hoc'}, 
+                    {
+                        'code' : 1004,
+                        'message': 'Class not found. Please check input again'
+                    }, 
                     status= status.HTTP_404_NOT_FOUND
                 )
             
@@ -307,6 +377,8 @@ class ManageClassMember(APIView):
             ngayhoc = lopgiangday.ngayhoc
             kyhoc = lopgiangday.kyhoc
             trangthai = lopgiangday.trangthai
+            ngaybatdau = lopgiangday.start_day
+            ngayketthuc = lopgiangday.end_day
 
             thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
             thanhvien_seria = ThanhVienLopSerializer(thanhvienlop, many = True)
@@ -334,6 +406,8 @@ class ManageClassMember(APIView):
 
             return Response(
                 {
+                    'code' : 1000,
+                    'message' : "OK",
                     'Thong tin chi tiet' : {
                         "Ma lop hoc " : idlophoc,
                         "Ten lop hoc" : tenlophoc,
@@ -343,7 +417,10 @@ class ManageClassMember(APIView):
                         "Ngay hoc" : ngayhoc,
                         "Ky hoc" : kyhoc,
                         "So sinh vien " : count,
-                        "Trang thai lop" : trangthai 
+                        "Trang thai lop" : trangthai,
+                        "Ngay bat dau" : ngaybatdau,
+                        "Ngay ket thuc" : ngayketthuc,
+
                     },
                     'Danh sach thanhvien': list_class_member
                 }, 
@@ -363,7 +440,10 @@ class ManageClassMember(APIView):
             user= request.user
             if (not user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -371,14 +451,20 @@ class ManageClassMember(APIView):
             idthanhvien = data['idthanhvien']
             if ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0:
                 return Response(
-                    {'error': 'No matching data'}
+                    {
+                        'code' : 1004,
+                        'message': 'Member not found.' 
+                    }
                     ,status= status.HTTP_404_NOT_FOUND
                 )
             
             tinhtranghoc = data['tinhtranghoc']
             if tinhtranghoc < 0 or tinhtranghoc > 3:
                 return Response(
-                    {'error': 'Mismatch data. Please check with the admin'}
+                    {
+                        'code' : 1004,
+                        'message': 'Input invalid. Please try again.' 
+                    }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             
@@ -387,7 +473,10 @@ class ManageClassMember(APIView):
             thanhvienlop.save()
 
             return Response(
-                {'Update success'}
+                {
+                    'code' : 1000,
+                    'message': 'OK' 
+                }
                 ,status= status.HTTP_202_ACCEPTED
             )
         
@@ -404,7 +493,10 @@ class ManageClassMember(APIView):
             user= request.user
             if (not user.is_teacher) or user.is_active == False:
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -413,8 +505,10 @@ class ManageClassMember(APIView):
             idlophoc = data['idlophoc']
             if SinhVien.objects.filter(idsinhvien = idsinhvien).count() == 0 or LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return JsonResponse(
-                    {'error': 'No matching data'}
-                    ,safe=False 
+                    {
+                        'code' : 1004,
+                        'message': 'Member not found.' 
+                    }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             else:
@@ -422,7 +516,10 @@ class ManageClassMember(APIView):
                 thanhvienlop.delete()
 
                 return Response(
-                    {'Result': 'Delete successful'}
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }
                     ,status= status.HTTP_202_ACCEPTED
                 )        
 
@@ -444,7 +541,10 @@ class ManageClassStudent(APIView):
             user = request.user
             if (user.is_teacher):
                 return Response(
-                    {'error': 'User does not have necessary permission' }, 
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -464,6 +564,10 @@ class ManageClassStudent(APIView):
                 cahoc = lophoc.cahoc
                 ngayhoc = lophoc.ngayhoc
                 kyhoc = lophoc.kyhoc
+                ngaybatdau = lophoc.start_day
+                ngayketthuc = lophoc.end_day
+                
+                studentcount = ThanhVienLop.objects.filter(idlophoc = idlophoc).count()
 
                 lopgiangday_seria = LopHocSerializer(lophoc)
                 idgiangvien = lopgiangday_seria.data.get('idgiangvien')
@@ -478,12 +582,19 @@ class ManageClassStudent(APIView):
                         "Gio bat dau" : cahoc,
                         "Ngay hoc" : ngayhoc,
                         "Ky hoc" : kyhoc,
-                        "Trang thai" : tinhtranghoc
+                        "So luong sinh vien" : studentcount,
+                        "Trang thai" : tinhtranghoc,
+                        "Ngay bat dau" : ngaybatdau,
+                        "Ngay ket thuc" : ngayketthuc,
                     }
                 )
 
             return Response(
-                {'Danh sach lop dang ky': list_class}, 
+                {
+                    'code' : 1000,
+                    'message' : "OK",
+                    'Danh sach lop dang ky': list_class
+                }, 
                 status= status.HTTP_200_OK
             )
             
