@@ -94,7 +94,7 @@ class ManageAccount(APIView):
                             insert_sinhvien(requested_data=data,Email=email,accountName=accountname,user=student)
                             return Response(
                                 {
-                                    'code': "1000",
+                                    'code': 1000,
                                     'message' : "OK"
                                 },
                                 status= status.HTTP_201_CREATED
@@ -105,7 +105,7 @@ class ManageAccount(APIView):
                             insert_giangvien(requested_data=data,Email=email,accountName=accountname,user=teacher)
                             return Response(
                                 {
-                                    'code': "1000",
+                                    'code': 1000,
                                     'message' : "OK"
                                 },
                                 status= status.HTTP_201_CREATED
@@ -113,7 +113,7 @@ class ManageAccount(APIView):
                     else:
                         return Response(
                             {
-                                'code': "9996",
+                                'code': 9996,
                                 'message' : "User has already exsit"
                             },
                             status= status.HTTP_400_BAD_REQUEST
@@ -121,7 +121,7 @@ class ManageAccount(APIView):
                 else:
                     return Response(
                         {
-                            'code' : "1004",
+                            'code' : 1004,
                             'messsage': "Password must have more than 6 character and less than 10 character"
                         },
                         status= status.HTTP_400_BAD_REQUEST
@@ -130,7 +130,7 @@ class ManageAccount(APIView):
             else:
                 return Response(
                     {
-                        'code' : "1004",
+                        'code' : 1004,
                         'messsage': 'Password do not match'
                     },
                     status= status.HTTP_400_BAD_REQUEST
@@ -149,7 +149,7 @@ class ManageAccount(APIView):
             if ( not user.is_teacher ):
                 return Response(
                     {
-                        'code' : "1009",
+                        'code' : 1009,
                         'message': 'User does not have necessary permission' 
                     }, 
                     status=status.HTTP_403_FORBIDDEN
@@ -176,7 +176,7 @@ class ManageAccount(APIView):
             if ( not user.is_teacher ):
                 return Response(
                     {
-                        'code' : "1009",
+                        'code' : 1009,
                         'message': 'User does not have necessary permission' 
                     },
                     status=status.HTTP_403_FORBIDDEN
@@ -456,8 +456,8 @@ class VerifyToken(APIView):
                     'message' : "OK",
                     'data' : 
                     {
-                        "id" : user.id,
-                        "token" : validated_token.payload,
+                        "token" : raw_token,
+                        "user is_teacher" : user.is_teacher,
                         "active" : user.is_active
                     }
                 }
