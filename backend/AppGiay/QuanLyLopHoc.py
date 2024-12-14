@@ -67,6 +67,8 @@ class ManageClassTeacher(APIView):
                 start_day = data['batdau']
                 end_day = data['ketthuc']
 
+                thoigiangui = datetime.datetime.now()
+                
                 if is_valid_param(tenlophoc) == False or len(tenlophoc) > 50:
                     return  Response(
                         {
@@ -91,7 +93,16 @@ class ManageClassTeacher(APIView):
                             'code' : 1004,
                             'message': 'The start day must before the end day.'
                         }, 
-                        status= status.HTTP_404_NOT_FOUND
+                        status= status.HTTP_406_NOT_ACCEPTABLE
+                    )
+                
+                if start_day < str(thoigiangui):
+                    return  Response(
+                        {
+                            'code' : 1004,
+                            'message': 'The start day must not in the past.'
+                        }, 
+                        status= status.HTTP_406_NOT_ACCEPTABLE
                     )
 
                 lophoc = LopHoc(idlophoc = idlophoc, tenlophoc = tenlophoc, mota = mota, cahoc = cahoc, ngayhoc = ngayhoc, kyhoc = kyhoc, maxstudent = maxstudent, 
@@ -289,7 +300,7 @@ class ManageClassTeacher(APIView):
             )
         
 
-class ManageClassMember(APIView):
+class ManageClassStudent(APIView):
 
     permission_classes = (permissions.AllowAny, )
     
@@ -350,79 +361,65 @@ class ManageClassMember(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    #Get class info
+    #Get class list for student
     def get(self, request):
         try:
-            list_class_member = []
-            data = request.data
-
-            idlophoc = data['idlophoc']
-            if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
-                return  Response(
+            user = request.user
+            if (user.is_teacher):
+                return Response(
                     {
-                        'code' : 1004,
-                        'message': 'Class not found. Please check input again'
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
                     }, 
-                    status= status.HTTP_404_NOT_FOUND
+                    status=status.HTTP_403_FORBIDDEN
                 )
             
-            lopgiangday = LopHoc.objects.get(idlophoc = idlophoc)
-            lopgiangday_seria = LopHocSerializer(lopgiangday)
-            idgiangvien = lopgiangday_seria.data.get('idgiangvien')
-            tengiangvien = GiangVien.objects.get(idgiangvien = idgiangvien).tengiangvien
+            list_class = []
+            user_id = user.id
+            sinhvien = SinhVien.objects.get(id = user_id)
+            sinhvien_id = sinhvien.idsinhvien
 
-            tenlophoc = lopgiangday.tenlophoc
-            mota = lopgiangday.mota
-            cahoc = lopgiangday.cahoc
-            ngayhoc = lopgiangday.ngayhoc
-            kyhoc = lopgiangday.kyhoc
-            trangthai = lopgiangday.trangthai
-            ngaybatdau = lopgiangday.start_day
-            ngayketthuc = lopgiangday.end_day
-
-            thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
-            thanhvien_seria = ThanhVienLopSerializer(thanhvienlop, many = True)
-            
-            count = 0
-            
-            for group in thanhvien_seria.data :
-                idsinhvien = group.get('idsinhvien')
-                sinhvien = SinhVien.objects.get(idsinhvien = idsinhvien)
-                tensinhvien = sinhvien.tensinhvien
-                sdt = sinhvien.sdt
-
+            lopdangky = ThanhVienLop.objects.filter(idsinhvien = sinhvien_id)
+            lopdangky_seria = ThanhVienLopSerializer(lopdangky, many = True)
+            for group in lopdangky_seria.data :
+                idlophoc = group.get('idlophoc')
                 tinhtranghoc = group.get('tinhtranghoc')
+                lophoc = LopHoc.objects.get(idlophoc = idlophoc)
+                tenlophoc = lophoc.tenlophoc
+                mota = lophoc.mota
+                cahoc = lophoc.cahoc
+                ngayhoc = lophoc.ngayhoc
+                kyhoc = lophoc.kyhoc
+                ngaybatdau = lophoc.start_day
+                ngayketthuc = lophoc.end_day
+                
+                studentcount = ThanhVienLop.objects.filter(idlophoc = idlophoc).count()
 
-                list_class_member.append(
+                lopgiangday_seria = LopHocSerializer(lophoc)
+                idgiangvien = lopgiangday_seria.data.get('idgiangvien')
+                tengiangvien = GiangVien.objects.get(idgiangvien = idgiangvien).tengiangvien
+
+                list_class.append(
                     {
-                        "Ma sinh vien" : idsinhvien,
-                        "Ten sinh vien" : tensinhvien,
-                        "So dien thoai" : sdt,
-                        "Tinh trang hoc" : tinhtranghoc
-                    }
-                )
-
-                count = count + 1
-
-            return Response(
-                {
-                    'code' : 1000,
-                    'message' : "OK",
-                    'Thong tin chi tiet' : {
-                        "Ma lop hoc " : idlophoc,
+                        "Ma lop" : idlophoc,
                         "Ten lop hoc" : tenlophoc,
                         "Ten giang vien" : tengiangvien,
                         "Mo ta" : mota,
                         "Gio bat dau" : cahoc,
                         "Ngay hoc" : ngayhoc,
                         "Ky hoc" : kyhoc,
-                        "So sinh vien " : count,
-                        "Trang thai lop" : trangthai,
+                        "So luong sinh vien" : studentcount,
+                        "Trang thai" : tinhtranghoc,
                         "Ngay bat dau" : ngaybatdau,
                         "Ngay ket thuc" : ngayketthuc,
+                    }
+                )
 
-                    },
-                    'Danh sach thanhvien': list_class_member
+            return Response(
+                {
+                    'code' : 1000,
+                    'message' : "OK",
+                    'Danh sach lop dang ky': list_class
                 }, 
                 status= status.HTTP_200_OK
             )
@@ -529,71 +526,85 @@ class ManageClassMember(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+     
 
-class ManageClassStudent(APIView):
+class GetClassInfo(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
-    #Get class list for student
+    #Get class info
     def get(self, request):
         try:
-            user = request.user
-            if (user.is_teacher):
-                return Response(
+            list_class_member = []
+            data = request.data
+
+            idlophoc = data['idlophoc']
+            if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
+                return  Response(
                     {
-                        'code' : 1009,
-                        'message': 'User does not have necessary permission' 
+                        'code' : 1004,
+                        'message': 'Class not found. Please check input again'
                     }, 
-                    status=status.HTTP_403_FORBIDDEN
+                    status= status.HTTP_404_NOT_FOUND
                 )
             
-            list_class = []
-            user_id = user.id
-            sinhvien = SinhVien.objects.get(id = user_id)
-            sinhvien_id = sinhvien.idsinhvien
+            lopgiangday = LopHoc.objects.get(idlophoc = idlophoc)
+            lopgiangday_seria = LopHocSerializer(lopgiangday)
+            idgiangvien = lopgiangday_seria.data.get('idgiangvien')
+            tengiangvien = GiangVien.objects.get(idgiangvien = idgiangvien).tengiangvien
 
-            lopdangky = ThanhVienLop.objects.filter(idsinhvien = sinhvien_id)
-            lopdangky_seria = ThanhVienLopSerializer(lopdangky, many = True)
-            for group in lopdangky_seria.data :
-                idlophoc = group.get('idlophoc')
+            tenlophoc = lopgiangday.tenlophoc
+            mota = lopgiangday.mota
+            cahoc = lopgiangday.cahoc
+            ngayhoc = lopgiangday.ngayhoc
+            kyhoc = lopgiangday.kyhoc
+            trangthai = lopgiangday.trangthai
+            ngaybatdau = lopgiangday.start_day
+            ngayketthuc = lopgiangday.end_day
+
+            thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
+            thanhvien_seria = ThanhVienLopSerializer(thanhvienlop, many = True)
+            
+            count = 0
+            
+            for group in thanhvien_seria.data :
+                idsinhvien = group.get('idsinhvien')
+                sinhvien = SinhVien.objects.get(idsinhvien = idsinhvien)
+                tensinhvien = sinhvien.tensinhvien
+                sdt = sinhvien.sdt
+
                 tinhtranghoc = group.get('tinhtranghoc')
-                lophoc = LopHoc.objects.get(idlophoc = idlophoc)
-                tenlophoc = lophoc.tenlophoc
-                mota = lophoc.mota
-                cahoc = lophoc.cahoc
-                ngayhoc = lophoc.ngayhoc
-                kyhoc = lophoc.kyhoc
-                ngaybatdau = lophoc.start_day
-                ngayketthuc = lophoc.end_day
-                
-                studentcount = ThanhVienLop.objects.filter(idlophoc = idlophoc).count()
 
-                lopgiangday_seria = LopHocSerializer(lophoc)
-                idgiangvien = lopgiangday_seria.data.get('idgiangvien')
-                tengiangvien = GiangVien.objects.get(idgiangvien = idgiangvien).tengiangvien
-
-                list_class.append(
+                list_class_member.append(
                     {
-                        "Ma lop" : idlophoc,
+                        "Ma sinh vien" : idsinhvien,
+                        "Ten sinh vien" : tensinhvien,
+                        "So dien thoai" : sdt,
+                        "Tinh trang hoc" : tinhtranghoc
+                    }
+                )
+
+                count = count + 1
+
+            return Response(
+                {
+                    'code' : 1000,
+                    'message' : "OK",
+                    'Thong tin chi tiet' : {
+                        "Ma lop hoc " : idlophoc,
                         "Ten lop hoc" : tenlophoc,
                         "Ten giang vien" : tengiangvien,
                         "Mo ta" : mota,
                         "Gio bat dau" : cahoc,
                         "Ngay hoc" : ngayhoc,
                         "Ky hoc" : kyhoc,
-                        "So luong sinh vien" : studentcount,
-                        "Trang thai" : tinhtranghoc,
+                        "So sinh vien " : count,
+                        "Trang thai lop" : trangthai,
                         "Ngay bat dau" : ngaybatdau,
                         "Ngay ket thuc" : ngayketthuc,
-                    }
-                )
 
-            return Response(
-                {
-                    'code' : 1000,
-                    'message' : "OK",
-                    'Danh sach lop dang ky': list_class
+                    },
+                    'Danh sach thanhvien': list_class_member
                 }, 
                 status= status.HTTP_200_OK
             )

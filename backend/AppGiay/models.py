@@ -209,8 +209,8 @@ class LopHoc(models.Model):
     idlophoc = models.AutoField(db_column='IDLopHoc', primary_key=True)  # Field name made lowercase.
     tenlophoc = models.CharField(db_column='TenLopHoc', max_length=50)  # Field name made lowercase.
     mota = models.CharField(db_column='MoTa', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    cahoc = models.SmallIntegerField(db_column='CaHoc', db_comment=' Ca 1 = 0, Ca 2 = 1, Ca 3 = 2, ...')  # Field name made lowercase.
-    ngayhoc = models.SmallIntegerField(db_column='NgayHoc', db_comment=' Thứ 2 = 0, Thứ 3 = 1, Thứ 4 = 2, ...')  # Field name made lowercase.
+    cahoc = models.SmallIntegerField(db_column='CaHocTrongNgay', db_comment=' Ca 1 = 0, Ca 2 = 1, Ca 3 = 2, ...')  # Field name made lowercase.
+    ngayhoc = models.SmallIntegerField(db_column='NgayHocTrongTuan', db_comment=' Thứ 2 = 0, Thứ 3 = 1, Thứ 4 = 2, ...')  # Field name made lowercase.
     kyhoc = models.CharField(db_column='Ky hoc', max_length=7)  # Field name made lowercase.
     maxstudent =  models.SmallIntegerField(db_column='SoSinhVienToiDa', default= 100)  # Field name made lowercase.
     trangthai = models.SmallIntegerField(db_column='TrangThai', db_comment=' Đang đăng ký = 0, Đang hoạt động = 1, Đã kết thúc = 2')  # Field name made lowercase.
@@ -246,3 +246,25 @@ class DonXinNghi(models.Model):
     class Meta:
         managed = True
         db_table = 'donxinnghi'
+
+
+class  BuoiHoc(models.Model):
+    idbuoihoc = models.AutoField(db_column='IDbuoiHoc', primary_key=True)  # Field name made lowercase.
+    idlophoc = models.ForeignKey('LopHoc', models.CASCADE, db_column='IDLopHoc') # Field name made lowercase.
+    ngaydienra = models.DateField(db_column='NgayDienRa') # Field name made lowercase.
+
+    class Meta:
+        managed = True
+        db_table = 'buoihoc'
+
+
+class DiemDanh(models.Model):
+    iddiemdanh = models.AutoField(db_column='IDDiemDanh', primary_key=True)  # Field name made lowercase.
+    idbuoihoc = models.ForeignKey('BuoiHoc', models.CASCADE, db_column='IDBuoiHoc') # Field name made lowercase.
+    idsinhvien = models.ForeignKey('SinhVien', models.CASCADE, db_column='IDSinhVien') # Field name made lowercase.
+    trangthaidiemdanh = models.SmallIntegerField(db_column='TrangThaiDiemDanh', db_comment=' Có mặt = 0, Muộn học = 1, Vắng có phép = 2, Vắng không có phép = 3')  # Field name made lowercase.
+    thoigiandiemdanh = models.DateTimeField(db_column='ThoigianDiemDanh') # Field name made lowercase.
+
+    class Meta:
+        managed = True
+        db_table = 'diemdanh'

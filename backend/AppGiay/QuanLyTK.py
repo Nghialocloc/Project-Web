@@ -193,7 +193,7 @@ class ManageAccount(APIView):
                 account.gioitinh = gioitinh
                 account.ngaysinh = ngaysinh
                 account.save()
-                user_seria = UserAccountSerializer(account)
+
                 return Response(
                     {
                         'code' : 1000,
@@ -218,11 +218,9 @@ class ChangeInfo(APIView):
         try:
             data = request.data
 
-            option = data['option']
-
-            if option == 0:
+            if is_valid_param(user_id) == False:
                 user_id = data["user_id"]
-                if is_valid_param(user_id) == False or UserAccount.objects.filter(id = user_id).count() == 0:
+                if  UserAccount.objects.filter(id = user_id).count() == 0:
                     return Response(
                         {
                             'code' : 9995,
@@ -253,7 +251,7 @@ class ChangeInfo(APIView):
                     },
                     status=status.HTTP_200_OK
                 )
-            elif option == 1:
+            elif is_valid_param(user_id) == True:
                 user = request.user
                 user_id = user.id
 
@@ -325,25 +323,43 @@ class ChangeAccountState(APIView):
             account = UserAccount.objects.get(id=number)
             
             if(option == 0):
-                account.is_active = False
-                account.save()
-                return Response(
-                    {
-                        'code' : 1000,
-                        'message' : 'Update success. Deactivate user'
-                    }, 
-                    status= status.HTTP_202_ACCEPTED
-                )
+                if(account.is_active == False):
+                    return Response(
+                        {
+                            'code' : 1004,
+                            'message' : 'User account has already deactivated'
+                        }, 
+                        status= status.HTTP_304_NOT_MODIFIED
+                    )
+                else:
+                    account.is_active = False
+                    account.save()
+                    return Response(
+                        {
+                            'code' : 1000,
+                            'message' : 'Update success. Deactivate user'
+                        }, 
+                        status= status.HTTP_202_ACCEPTED
+                    )
             elif (option == 1) :
-                account.is_active = True
-                account.save()
-                return Response(
-                    {
-                        'code' : 1000,
-                        'message' : 'Update success. Activate user'
-                    },  
-                    status= status.HTTP_202_ACCEPTED
-                )
+                if(account.is_active == True):
+                    return Response(
+                        {
+                            'code' : 1004,
+                            'message' : 'User account has already activated'
+                        },  
+                        status= status.HTTP_304_NOT_MODIFIED
+                    )
+                else:
+                    account.is_active = True
+                    account.save()
+                    return Response(
+                        {
+                            'code' : 1000,
+                            'message' : 'Update success. Activate user'
+                        },  
+                        status= status.HTTP_202_ACCEPTED
+                    )
             else :
                 return Response(
                     {
@@ -359,6 +375,7 @@ class ChangeAccountState(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 from ProjectBanGiay.view import MyTokenObtainPairSerializer, MyTokenObtainPairView
 

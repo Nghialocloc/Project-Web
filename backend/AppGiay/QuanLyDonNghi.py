@@ -113,13 +113,22 @@ class ManageAbsenceForm(APIView):
             if DonXinNghi.objects.filter(iddon = iddon).count() == 0:
                 return Response(
                     {
-                        'code' : 1005,
+                        'code' : 1004,
                         'message': 'Form not found. Please check input again.' 
                     }
                     ,status= status.HTTP_404_NOT_FOUND
                 )
 
             trangthai = data['trangthai']
+            if trangthai < 0 or trangthai > 3:
+                return Response(
+                    {
+                        'code' : 1005,
+                        'message': 'Status is out of bound. Please check input again.' 
+                    }
+                    ,status= status.HTTP_404_NOT_FOUND
+                )
+            
             thoigianphanhoi = datetime.datetime.now()
             donnghi = DonXinNghi.objects.get(iddon = iddon)
             
@@ -190,7 +199,7 @@ class ManageAbsenceForm(APIView):
             if LopHoc.objects.filter(idgiangvien = idgiangvien, idlophoc = idlophoc).count() == 0:
                 return Response(
                     {
-                        'code' : 1009,
+                        'code' : 1004,
                         'message': 'Class not found. Please try again.' 
                     }
                     ,status= status.HTTP_400_BAD_REQUEST
