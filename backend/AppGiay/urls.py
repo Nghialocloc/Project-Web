@@ -25,4 +25,7 @@ urlpatterns = [
     #QuanLyDiemDanh
     path('ManageAttendance', ManageAttendanceClass.as_view()),
     path('AttendanceInfo', GetAttendanceRecord.as_view()),
+
+    #QuanLyTaiLieu
+    
 ]

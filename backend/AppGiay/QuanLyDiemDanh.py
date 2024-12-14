@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import SinhVien, GiangVien
 from .models import LopHoc, ThanhVienLop, DonXinNghi
 from .models import BuoiHoc, DiemDanh
-from .serializers import UserAccountSerializer
+from .serializers import UserAccountSerializer, SinhVienSerializer
 from .serializers import LopHocSerializer, ThanhVienLopSerializer, DonXinNghiSerializer
 from .serializers import BuoiHocSerializer, DiemDanhSerializer
 from django.contrib.auth import get_user_model
@@ -286,4 +286,80 @@ class GetAttendanceRecord(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
-    
+    #Get attendance list for student
+    def get(self, request):
+        try:
+            user = request.user
+            if (user.is_teacher):
+                return Response(
+                    {
+                        'code' : 1009,
+                        'message': 'User does not have necessary permission' 
+                    }, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            list_attendance = []
+            
+            data = request.data
+            idlophoc = data['idlophoc']
+            if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
+                return Response(
+                    {
+                        'code' : 1004,
+                        'message': 'Class not found. Please try again.' 
+                    }
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )      
+            lophoc  = LopHoc.objects.get(idlophoc = idlophoc)
+            tenlophoc = lophoc.tenlophoc
+            
+            sinhvien = SinhVien.objects.get(id = user.id)
+            sinhvien_seria = SinhVienSerializer(sinhvien)
+            idsinhvien = sinhvien_seria.data.get('idsinhvien')
+
+            if BuoiHoc.objects.filter(idlophoc = idlophoc, idsinhvien = idsinhvien).count() == 0:
+                return Response(
+                    {
+                        'code' : 1005,
+                        'message': 'Student have no attendance in this class.' 
+                    }
+                    ,status= status.HTTP_404_NOT_FOUND
+                )      
+
+            buoihoc = BuoiHoc.objects.get(idlophoc = idlophoc, idsinhvien = idsinhvien)
+            buoihoc_seria = BuoiHocSerializer(buoihoc, many = True)
+            for group in buoihoc_seria.data :
+                idbuoihoc = group.get('idbuoihoc')
+                ngaydienra = group.get('ngaydienra')
+                diemdanh = DiemDanh.objects.get(idbuoihoc = idbuoihoc, idsinhvien = idsinhvien)
+                trangthaidiemdanh = diemdanh.trangthaidiemdanh
+                thoigiandiemdanh = diemdanh.thoigiandiemdanh
+
+                list_attendance.append(
+                    {
+                        "Ngay" : ngaydienra,
+                        "Trang thai" : trangthaidiemdanh,
+                        "Thoi gian diem danh" : thoigiandiemdanh,
+                    }   
+                )
+
+            return Response(
+                {
+                    'code' : 1000,
+                    'message' : "OK",
+                    'Thong tin lop hoc' : 
+                    {
+                        "Id lop hoc" : idlophoc,
+                        "Ten lop hoc" : tenlophoc
+                    },
+                    'Danh sach diem danh cua sinh vien': list_attendance
+                }, 
+                status= status.HTTP_200_OK
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return Response(
+                {'error': 'Something went wrong!'},
+                status= status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
