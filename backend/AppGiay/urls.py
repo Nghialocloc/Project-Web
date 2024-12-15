@@ -3,6 +3,7 @@ from .QuanLyTK import ManageAccount, ChangeInfo, ChangeAccountState, LogoutView,
 from .QuanLyLopHoc import ManageClassTeacher, ManageClassStudent, GetClassInfo
 from .QuanLyDonNghi import ManageAbsenceForm
 from .QuanLyDiemDanh import ManageAttendanceClass, GetAttendanceRecord
+from .QuanLyTaiLieu import ManageMaterial, GetMaterialInfo
 
 
 urlpatterns = [
@@ -27,5 +28,7 @@ urlpatterns = [
     path('AttendanceInfo', GetAttendanceRecord.as_view()),
 
     #QuanLyTaiLieu
-    
+    path('ManageMaterial', ManageMaterial.as_view()),
+    path('MaterialInfo', GetMaterialInfo.as_view()),
+
 ]

@@ -220,20 +220,31 @@ class ManageClassTeacher(APIView):
             
             tenlophoc = data['tenlophoc']
             mota = data['mota']
-            cahoc = data['cahoc']
             maxstudent = data['sosinhvientoida']
             trangthai = data['trangthai']
             ngaybatdau = data['ngaybatdau']
             ngayketthuc = data['ngayketthuc']
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
-            lophoc.tenlophoc = tenlophoc
-            lophoc.mota = mota
-            lophoc.cahoc = cahoc
-            lophoc.maxstudent = maxstudent
-            lophoc.trangthai = trangthai
-            lophoc.start_day = ngaybatdau
-            lophoc.end_day = ngayketthuc
+
+            if is_valid_param(tenlophoc) == True:
+                lophoc.tenlophoc = tenlophoc
+            
+            if is_valid_param(mota) == True:
+                lophoc.mota = mota
+            
+            if is_valid_param(maxstudent) == True:
+                lophoc.maxstudent = maxstudent
+
+            if is_valid_param(trangthai) == True:
+                lophoc.trangthai = trangthai
+
+            if is_valid_param(ngaybatdau) == True:
+                lophoc.start_day = ngaybatdau
+
+            if is_valid_param(ngayketthuc) == True:
+                lophoc.end_day = ngayketthuc
+            
             lophoc.save()
 
             return Response(
@@ -488,7 +499,7 @@ class ManageClassStudent(APIView):
     def delete(self, request):
         try: 
             user= request.user
-            if (not user.is_teacher) or user.is_active == False:
+            if (not user.is_teacher):
                 return Response(
                     {
                         'code' : 1009,
@@ -514,8 +525,8 @@ class ManageClassStudent(APIView):
 
                 return Response(
                     {
-                        'code' : 1009,
-                        'message': 'User does not have necessary permission' 
+                        'code' : 1000,
+                        'message': 'OK' 
                     }
                     ,status= status.HTTP_202_ACCEPTED
                 )        
