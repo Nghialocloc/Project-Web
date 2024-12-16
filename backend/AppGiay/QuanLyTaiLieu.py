@@ -191,6 +191,7 @@ class ManageMaterial(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Check xem các thuộc tính mới có giống cũ không ? chưa hoàn chỉnh
             tailieu_seria = TaiLieuHocTapSerializer(tailieu)
             old_tentailieu = tailieu_seria.data.get('tentailieu')
             old_description = tailieu_seria.data.get('description')
