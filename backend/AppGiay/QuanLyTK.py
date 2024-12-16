@@ -17,7 +17,7 @@ JWT_authenticator = JWTAuthentication()
 User = get_user_model()
 
 # Create your views here.
-def is_valid_param(param) :
+def is_not_valid_param(param) :
     return param != " " and param is not None and param != ""
 
 
@@ -217,9 +217,9 @@ class ChangeInfo(APIView):
     def get(self, request, format=None):
         try:
             data = request.data
-
-            if is_valid_param(user_id) == False:
-                user_id = data["user_id"]
+            
+            user_id = data["user_id"]
+            if is_not_valid_param(user_id) == True:          
                 if  UserAccount.objects.filter(id = user_id).count() == 0:
                     return Response(
                         {
@@ -251,7 +251,8 @@ class ChangeInfo(APIView):
                     },
                     status=status.HTTP_200_OK
                 )
-            elif is_valid_param(user_id) == True:
+            
+            elif is_not_valid_param(user_id) == False:
                 user = request.user
                 user_id = user.id
 
@@ -275,6 +276,7 @@ class ChangeInfo(APIView):
                     },
                     status=status.HTTP_200_OK
                 )
+            
             else:
                 return Response(
                     {
@@ -326,7 +328,7 @@ class ChangeAccountState(APIView):
                 if(account.is_active == False):
                     return Response(
                         {
-                            'code' : 1004,
+                            'code' : 1012,
                             'message' : 'User account has already deactivated'
                         }, 
                         status= status.HTTP_304_NOT_MODIFIED
@@ -345,7 +347,7 @@ class ChangeAccountState(APIView):
                 if(account.is_active == True):
                     return Response(
                         {
-                            'code' : 1004,
+                            'code' : 1012,
                             'message' : 'User account has already activated'
                         },  
                         status= status.HTTP_304_NOT_MODIFIED
@@ -389,7 +391,7 @@ class LoginView(MyTokenObtainPairView):
         try:
             email = request.data['email']
             password = request.data['password']
-            if is_valid_param(email) == False or is_valid_param(password) == False:
+            if is_not_valid_param(email) == False or is_not_valid_param(password) == False:
                 return Response(
                     {
                         'code': 1004,

@@ -229,9 +229,8 @@ class ManageClassTeacher(APIView):
 
             if is_valid_param(tenlophoc) == True:
                 lophoc.tenlophoc = tenlophoc
-            
-            if is_valid_param(mota) == True:
-                lophoc.mota = mota
+
+            lophoc.mota = mota
             
             if is_valid_param(maxstudent) == True:
                 lophoc.maxstudent = maxstudent

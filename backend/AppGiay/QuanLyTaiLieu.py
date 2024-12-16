@@ -53,7 +53,7 @@ class ManageMaterial(APIView):
             loaitailieu = data['loaitailieu']
             link = data['link']
 
-            if is_valid_param(tentailieu) == False or is_valid_param(loaitailieu) == False or is_valid_param(link):
+            if is_valid_param(tentailieu) == False or is_valid_param(loaitailieu) == False or is_valid_param(link) == False:
                 return  Response(
                     {
                         'code' : 1002,
@@ -67,8 +67,9 @@ class ManageMaterial(APIView):
                 if (TaiLieuHocTap.objects.filter(idtailieu = idtailieu).count() == 0):
                     break
             
-            tailieu = TaiLieuHocTap(idtailieu = idtailieu, tentailieu = tentailieu, description = description,
-                                    loaitailieu = loaitailieu, link = link,)
+
+            tailieu = TaiLieuHocTap(idtailieu = idtailieu, idlophoc = LopHoc.objects.get(idlophoc = idlophoc), tentailieu = tentailieu, 
+                                    description = description, loaitailieu = loaitailieu, link = link,)
             tailieu.save()
 
             return Response(
@@ -175,13 +176,13 @@ class ManageMaterial(APIView):
                 )
             
             tentailieu = data['tentailieu']
-            mota = data['mota']
+            mota = data['description']
             loaitailieu = data['loaitailieu']
             link = data['link']
 
             tailieu = TaiLieuHocTap.objects.get(idtailieu = idtailieu)
 
-            if is_valid_param(tentailieu) == True:
+            if is_valid_param(tentailieu) == False:
                 return Response(
                     {
                         'code' : 1006,
@@ -190,13 +191,18 @@ class ManageMaterial(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            if tailieu.tentailieu == tentailieu and tailieu.description == mota and tailieu.loaitailieu == loaitailieu and tailieu.link == link:
+            tailieu_seria = TaiLieuHocTapSerializer(tailieu)
+            old_tentailieu = tailieu_seria.data.get('tentailieu')
+            old_description = tailieu_seria.data.get('description')
+            old_loaitailieu = tailieu_seria.data.get('loaitailieu')
+            old_link = tailieu_seria.data.get('link')
+            if old_tentailieu == tentailieu and old_description == mota and old_loaitailieu == loaitailieu and old_link == link:
                 return Response(
                     {
                         'code' : 1012,
                         'message': 'No info of file has not been modified' 
                     }, 
-                    status=status.HTTP_304_NOT_MODIFIED
+                    status=status.HTTP_400_BAD_REQUEST
                 )
             
             if len(mota) > 200:
@@ -209,9 +215,7 @@ class ManageMaterial(APIView):
                 )
 
             tailieu.tentailieu = tentailieu
-
-            if is_valid_param(mota) == True:
-                tailieu.description = mota
+            tailieu.description = mota
             
             if is_valid_param(loaitailieu) == True:
                 tailieu.loaitailieu = loaitailieu

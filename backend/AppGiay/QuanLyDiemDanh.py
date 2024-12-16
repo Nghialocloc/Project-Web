@@ -29,7 +29,8 @@ def new_attendance(idlophoc, ngaydienra):
         if (BuoiHoc.objects.filter(idbuoihoc= idbuoihoc ).count() == 0):
             break
     
-    buoihoc = BuoiHoc(idbuoihoc=idbuoihoc, idlophoc=idlophoc, ngaydienra=ngaydienra)
+    lophoc = LopHoc.objects.get(idlophoc=idlophoc)
+    buoihoc = BuoiHoc(idbuoihoc=idbuoihoc, idlophoc=lophoc, ngaydienra=ngaydienra)
     buoihoc.save()
     
     return buoihoc
@@ -55,7 +56,7 @@ class ManageAttendanceClass(APIView):
             
             idlophoc = data['idlophoc']
             ngaydienra = data['ngayhoc']
-            attendance_list = data['attendance_list', []]
+            attendance_list = data['attendance_list']
             
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
@@ -75,7 +76,7 @@ class ManageAttendanceClass(APIView):
                 return Response(
                     {
                         'code' : 1009,
-                        'message': 'This teacher doesn"t manage this class and have necessary permission' 
+                        'message': 'This teacher doesnt manage this class and have necessary permission' 
                     }, 
                     status= status.HTTP_403_FORBIDDEN
                 )
@@ -85,7 +86,7 @@ class ManageAttendanceClass(APIView):
                 return Response(
                         {
                             'code' : 1004,
-                            'message': "Attendance day had passed. Please input again."
+                            'message': "Attendance day is in the past. Please check input again."
                         },
                         status=status.HTTP_400_BAD_REQUEST
                     )
@@ -97,6 +98,7 @@ class ManageAttendanceClass(APIView):
                 
                 for group in member_seria.data:
                     idsinhvien = group.get('idsinhvien')
+                    sinhvien = SinhVien.objects.get(idsinhvien = idsinhvien)
 
                     while True:
                         iddiemdanh = id_generator(size=8)
@@ -110,7 +112,7 @@ class ManageAttendanceClass(APIView):
                     
                     thoigiandiemdanh = datetime.datetime.now()
 
-                    diemdanh = DiemDanh(iddiemdanh = iddiemdanh, idbuoihoc = buoihoc.idbuoihoc, idsinhvien = idsinhvien, 
+                    diemdanh = DiemDanh(iddiemdanh = iddiemdanh, idbuoihoc = buoihoc, idsinhvien = sinhvien, 
                                         trangthaidiemdanh = trangthaidiemdanh, thoigiandiemdanh = thoigiandiemdanh)
                     diemdanh.save()
 
@@ -153,7 +155,16 @@ class ManageAttendanceClass(APIView):
                     ,status= status.HTTP_404_NOT_FOUND
                 )
 
-            status = data['status']
+            trangthai = data['status']
+            if is_valid_param(trangthai) == False:
+                return Response(
+                    {
+                        'code' : 1005,
+                        'message': 'No status input found. Please check again.' 
+                    }
+                    ,status= status.HTTP_404_NOT_FOUND
+                )
+            
             thoigianphanhoi = datetime.datetime.now()
 
             diemdanh = DiemDanh.objects.get(iddiemdanh = iddiemdanh)
@@ -173,12 +184,12 @@ class ManageAttendanceClass(APIView):
                 return Response(
                     {
                         'code' : 1009,
-                        'message': 'This teacher doesn"t manage this class and have necessary permission' 
+                        'message': 'This teacher doesnt manage this class and have necessary permission' 
                     }, 
                     status= status.HTTP_403_FORBIDDEN
                 )
 
-            diemdanh.trangthaidiemdanh = status
+            diemdanh.trangthaidiemdanh = trangthai
             diemdanh.thoigiandiemdanh = thoigianphanhoi
             diemdanh.save()
 
@@ -318,16 +329,7 @@ class GetAttendanceRecord(APIView):
             sinhvien_seria = SinhVienSerializer(sinhvien)
             idsinhvien = sinhvien_seria.data.get('idsinhvien')
 
-            if BuoiHoc.objects.filter(idlophoc = idlophoc, idsinhvien = idsinhvien).count() == 0:
-                return Response(
-                    {
-                        'code' : 1005,
-                        'message': 'Student have no attendance in this class.' 
-                    }
-                    ,status= status.HTTP_404_NOT_FOUND
-                )      
-
-            buoihoc = BuoiHoc.objects.get(idlophoc = idlophoc, idsinhvien = idsinhvien)
+            buoihoc = BuoiHoc.objects.filter(idlophoc = idlophoc)
             buoihoc_seria = BuoiHocSerializer(buoihoc, many = True)
             for group in buoihoc_seria.data :
                 idbuoihoc = group.get('idbuoihoc')
@@ -343,6 +345,15 @@ class GetAttendanceRecord(APIView):
                         "Thoi gian diem danh" : thoigiandiemdanh,
                     }   
                 )
+
+            if len(list_attendance) == 0:
+                return Response(
+                    {
+                        'code' : 1000,
+                        'message': 'Student never have attendance in this class.' 
+                    }
+                    ,status= status.HTTP_200_OK
+                )      
 
             return Response(
                 {

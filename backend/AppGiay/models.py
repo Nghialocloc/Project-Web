@@ -277,7 +277,6 @@ class TaiLieuHocTap(models.Model):
     description = models.CharField(db_column='Descriptions', max_length=200, null=True) # Field name made lowercase.
     loaitailieu = models.SmallIntegerField(db_column='LoaiTaiLieu', db_comment=' Bài giảng = 0, Bài làm thêm = 1, Video hướng dẫn = 2')  # Field name made lowercase.
     link = models.CharField(db_column='Link', max_length=255) # Field name made lowercase.
-    # file = models.FileField(db_column='File') # Field name made lowercase.
 
     class Meta:
         managed = True

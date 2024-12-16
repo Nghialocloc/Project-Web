@@ -196,17 +196,25 @@ class ManageAbsenceForm(APIView):
             
             data = request.data
             idlophoc = data['idlophoc']
-            if LopHoc.objects.filter(idgiangvien = idgiangvien, idlophoc = idlophoc).count() == 0:
+            if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return Response(
                     {
-                        'code' : 1004,
+                        'code' : 1009,
                         'message': 'Class not found. Please try again.' 
                     }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
             
-            lophoc  = LopHoc.objects.get(idgiangvien = idgiangvien, idlophoc = idlophoc)
+            lophoc  = LopHoc.objects.get(idlophoc = idlophoc)
             tenlophoc = lophoc.tenlophoc
+            if lophoc.idgiangvien != idgiangvien:
+                return Response(
+                    {
+                        'code' : 1009,
+                        'message': 'This teacher doesnt manage this class and have necessary permission' 
+                    }
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
             
             thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
             thanhvienlop_seria = ThanhVienLopSerializer(thanhvienlop, many = True)

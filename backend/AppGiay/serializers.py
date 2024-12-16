@@ -47,4 +47,4 @@ class DiemDanhSerializer(serializers.ModelSerializer):
 class TaiLieuHocTapSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaiLieuHocTap 
-        fields = ['idtailieu', 'idlophoc', 'tentailieu', 'description', 'loaiTaiLieu', 'link',]
+        fields = ['idtailieu', 'idlophoc', 'tentailieu', 'description', 'loaitailieu', 'link',]
