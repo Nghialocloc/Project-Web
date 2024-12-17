@@ -395,7 +395,7 @@ class LoginView(MyTokenObtainPairView):
                 return Response(
                     {
                         'code': 1004,
-                        'message': 'Parameter is null',
+                        'message': 'Missing password or email',
                     },
                     status=status.HTTP_404_NOT_FOUND
                 )
@@ -468,7 +468,6 @@ class VerifyToken(APIView):
             validated_token = jwt_object.get_validated_token(raw_token)
             user  = jwt_object.get_user(validated_token)
 
-
             return Response(
                 {
                     'code': 1000,
@@ -480,6 +479,7 @@ class VerifyToken(APIView):
                         "active" : user.is_active
                     }
                 }
+                ,status= status.HTTP_200_OK
             )
         except Exception as e:
             traceback.print_exc()
