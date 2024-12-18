@@ -4,7 +4,7 @@ from .QuanLyLopHoc import ManageClass, ManageClassStudent, GetClassInfo, ManageS
 from .QuanLyDonNghi import ManageAbsenceForm
 from .QuanLyDiemDanh import ManageAttendanceClass, GetAttendanceRecord
 from .QuanLyTaiLieu import ManageMaterial, GetMaterialInfo
-from .QuanLyBaiTap import ManageAssignment, SubmitHomework, ManageHomework
+from .QuanLyBaiTap import ManageAssignment, SubmitHomework, ManageHomework, GetAssignmemntInfo, GetAssignmemntList
 
 
 urlpatterns = [
@@ -37,5 +37,6 @@ urlpatterns = [
     path('ManageAssignment', ManageAssignment.as_view()),
     path('ManageHomework', ManageHomework.as_view()),
     path('SummitHomework', SubmitHomework.as_view()),
-
+    path('GetAssignmemntList', GetAssignmemntList.as_view()),
+    path('GetAssignmemntInfo', GetAssignmemntInfo.as_view()),
 ]
