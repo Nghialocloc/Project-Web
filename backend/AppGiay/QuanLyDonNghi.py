@@ -9,12 +9,17 @@ from django.contrib.auth import get_user_model
 import traceback
 import random, string
 import datetime
+from django.utils import timezone
 
 User = get_user_model()
 
 def get_member_id(sinhvien, lophoc):
     thanhvien = ThanhVienLop.objects.get(idsinhvien = sinhvien, idlophoc = lophoc)
     return thanhvien.idthanhvien
+
+
+def is_valid_param(param) :
+    return param != " " and param is not None and param != ""
 
 
 def is_past_due(self):
@@ -65,7 +70,7 @@ class ManageAbsenceForm(APIView):
                 ngayxinnghi = data['ngayxinnghi']
                 lydo = data['lydo']
                 trangthai = 0
-                thoigiangui = datetime.datetime.now()
+                thoigiangui = timezone.now()
 
                 if ngayxinnghi < str(thoigiangui):
                     return Response(
@@ -110,6 +115,15 @@ class ManageAbsenceForm(APIView):
             
             data=request.data
             iddon = data['iddon']
+            if iddon or (not is_valid_param(iddon)):
+                return Response(
+                    {
+                        'code' : 1004,
+                        'message': 'Invaild id. Please check input again.' 
+                    }
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
+
             if DonXinNghi.objects.filter(iddon = iddon).count() == 0:
                 return Response(
                     {
@@ -129,7 +143,7 @@ class ManageAbsenceForm(APIView):
                     ,status= status.HTTP_404_NOT_FOUND
                 )
             
-            thoigianphanhoi = datetime.datetime.now()
+            thoigianphanhoi = timezone.now()
             donnghi = DonXinNghi.objects.get(iddon = iddon)
             
             donnghi_seria = DonXinNghiSerializer(donnghi)
@@ -196,6 +210,15 @@ class ManageAbsenceForm(APIView):
             
             data = request.data
             idlophoc = data['idlophoc']
+            if idlophoc or (not is_valid_param(idlophoc)):
+                return Response(
+                    {
+                        'code' : 1004,
+                        'message': 'Invaild id. Please check input again.' 
+                    }
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
+            
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return Response(
                     {

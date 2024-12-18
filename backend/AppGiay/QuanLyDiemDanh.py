@@ -2,15 +2,16 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import SinhVien, GiangVien
-from .models import LopHoc, ThanhVienLop, DonXinNghi
+from .models import LopHoc, ThanhVienLop
 from .models import BuoiHoc, DiemDanh
 from .serializers import UserAccountSerializer, SinhVienSerializer
-from .serializers import LopHocSerializer, ThanhVienLopSerializer, DonXinNghiSerializer
+from .serializers import LopHocSerializer, ThanhVienLopSerializer
 from .serializers import BuoiHocSerializer, DiemDanhSerializer
 from django.contrib.auth import get_user_model
 import traceback
 import random, string
 import datetime
+from django.utils import timezone
 
 User = get_user_model()
 

@@ -3,7 +3,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
 from .models import SinhVien, GiangVien
-from .models import UserAccount, UserAccountManager
 from .models import LopHoc, ThanhVienLop
 from .serializers import UserAccountSerializer
 from .serializers import SinhVienSerializer, GiangVienSerializer
@@ -24,7 +23,7 @@ def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-class ManageClassTeacher(APIView):
+class ManageClass(APIView):
 
     permission_classes = (permissions.AllowAny, )
 
@@ -78,7 +77,7 @@ class ManageClassTeacher(APIView):
                         status= status.HTTP_404_NOT_FOUND
                     )
                 
-                if is_valid_param(maxstudent) == False or maxstudent > 200:
+                if not is_valid_param(maxstudent) or maxstudent > 200:
                     return  Response(
                         {
                             'code' : 1004,
@@ -227,21 +226,21 @@ class ManageClassTeacher(APIView):
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
 
-            if is_valid_param(tenlophoc) == True:
+            if is_valid_param(tenlophoc):
                 lophoc.tenlophoc = tenlophoc
 
             lophoc.mota = mota
             
-            if is_valid_param(maxstudent) == True:
+            if is_valid_param(maxstudent):
                 lophoc.maxstudent = maxstudent
 
-            if is_valid_param(trangthai) == True:
+            if is_valid_param(trangthai):
                 lophoc.trangthai = trangthai
 
-            if is_valid_param(ngaybatdau) == True:
+            if is_valid_param(ngaybatdau):
                 lophoc.start_day = ngaybatdau
 
-            if is_valid_param(ngayketthuc) == True:
+            if is_valid_param(ngayketthuc):
                 lophoc.end_day = ngayketthuc
             
             lophoc.save()
@@ -441,6 +440,11 @@ class ManageClassStudent(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+class ManageStudent(APIView):
+
+    permission_classes = (permissions.AllowAny, )
+
     #Edit class member
     def put(self, request):
         try: 
@@ -536,7 +540,7 @@ class ManageClassStudent(APIView):
                 {'error': 'Some exeption happened'}, 
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-     
+
 
 class GetClassInfo(APIView):
 
@@ -544,6 +548,7 @@ class GetClassInfo(APIView):
 
     #Get class info
     def get(self, request):
+
         try:
             list_class_member = []
             data = request.data

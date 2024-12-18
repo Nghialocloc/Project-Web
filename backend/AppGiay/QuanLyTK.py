@@ -3,7 +3,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import SinhVien, GiangVien
-from .models import UserAccount, UserAccountManager
+from .models import UserAccount
 from .serializers import UserAccountSerializer
 from .serializers import SinhVienSerializer, GiangVienSerializer
 from django.contrib.auth import get_user_model

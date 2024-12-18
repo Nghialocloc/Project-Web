@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+import datetime
+from django.utils import timezone
 
 # Create your models here.
 
@@ -281,3 +283,31 @@ class TaiLieuHocTap(models.Model):
     class Meta:
         managed = True
         db_table = 'tailieu'
+
+
+class BaiTap(models.Model):
+    idbaitap = models.IntegerField(db_column='IDBaiTap', primary_key=True)  # ID bài tập
+    idlophoc = models.ForeignKey('LopHoc', on_delete=models.CASCADE, db_column='IDLopHoc')  # Liên kết lớp học
+    tenbaitap = models.CharField(max_length=50) # Tên bài tập
+    mota = models.CharField(db_column='MoTa', max_length=200)  # Mô tả chi tiết bài tập
+    filebaitap = models.FileField(db_column='FileBaiTap', upload_to='baitap_files/', null=True, blank=True)  # File đính kèm bài tập
+    deadline = models.DateTimeField(db_column='HanHop') # Hạn nộp bài tập
+    create_day = models.DateTimeField(db_column='NgayTao') # Ngày tạo bài tập
+
+    class Meta:
+        managed = True
+        db_table = 'baitap'
+
+
+class BaiLam(models.Model):
+    idbailam = models.IntegerField(db_column='IDBaiLam', primary_key=True)  # ID nộp bài
+    idbaitap = models.ForeignKey('BaiTap', on_delete=models.CASCADE, db_column='IDBaiTap') # Liên kết tới bài tập
+    idsinhvien = models.ForeignKey('SinhVien', on_delete=models.CASCADE, db_column='IDSinhVien')  # Liên kết sinh viên
+    filebailam = models.FileField(db_column='FileBaiLam', upload_to='nopbai_files/') # File bài giải sinh viên nộp
+    description = models.CharField(db_column='MoTa', max_length = 200,null=True, blank=True) # Mô tả bài làm (nếu không có file)
+    ngaynop = models.DateTimeField(db_column='NgayNop') # Ngày nộp bài
+    diem = models.FloatField(db_column='DiemSo', null=True, blank=True) # Điểm số bài tập (giáo viên chấm)
+
+    class Meta:
+        managed = True
+        db_table = 'bailam'

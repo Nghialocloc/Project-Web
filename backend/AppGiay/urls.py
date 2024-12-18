@@ -1,9 +1,10 @@
 from django.urls import path
 from .QuanLyTK import ManageAccount, ChangeInfo, ChangeAccountState, LogoutView, LoginView, VerifyToken
-from .QuanLyLopHoc import ManageClassTeacher, ManageClassStudent, GetClassInfo
+from .QuanLyLopHoc import ManageClass, ManageClassStudent, GetClassInfo, ManageStudent
 from .QuanLyDonNghi import ManageAbsenceForm
 from .QuanLyDiemDanh import ManageAttendanceClass, GetAttendanceRecord
 from .QuanLyTaiLieu import ManageMaterial, GetMaterialInfo
+from .QuanLyBaiTap import ManageAssignment, SubmitHomework, ManageHomework
 
 
 urlpatterns = [
@@ -16,8 +17,9 @@ urlpatterns = [
     path('Verify', VerifyToken.as_view()),
 
     #QuanLyLopHoc
-    path('AdminManageClass', ManageClassTeacher.as_view()),
-    path('ManageClass', ManageClassStudent.as_view()),
+    path('ManageClass', ManageClass.as_view()),
+    path('ManageClassStudent', ManageClassStudent.as_view()),
+    path('ManageStudent', ManageStudent.as_view()),
     path('ClassInfo', GetClassInfo.as_view()),
 
     #QuanLyDonNghi
@@ -30,5 +32,10 @@ urlpatterns = [
     #QuanLyTaiLieu
     path('ManageMaterial', ManageMaterial.as_view()),
     path('MaterialInfo', GetMaterialInfo.as_view()),
+
+    #QuanLyBaiTap
+    path('ManageAssignment', ManageAssignment.as_view()),
+    path('ManageHomework', ManageHomework.as_view()),
+    path('SummitHomework', SubmitHomework.as_view()),
 
 ]

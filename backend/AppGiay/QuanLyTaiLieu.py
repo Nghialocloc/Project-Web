@@ -1,9 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import SinhVien, GiangVien
 from .models import LopHoc, ThanhVienLop, TaiLieuHocTap
-from .serializers import UserAccountSerializer, SinhVienSerializer
 from .serializers import LopHocSerializer, ThanhVienLopSerializer, TaiLieuHocTapSerializer
 from django.contrib.auth import get_user_model
 import traceback
@@ -13,7 +11,7 @@ import datetime
 User = get_user_model()
 
 def is_valid_param(param) :
-    return param != " " and param is not None and param != ""
+    return (param != " ") and (param is not None) and (param != "")
 
 
 def id_generator (size, chars=string.digits):
@@ -38,7 +36,7 @@ class ManageMaterial(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            idlophoc = data['idlophoc'] 
+            idlophoc = data['idlophoc']
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
                     {
@@ -53,7 +51,7 @@ class ManageMaterial(APIView):
             loaitailieu = data['loaitailieu']
             link = data['link']
 
-            if is_valid_param(tentailieu) == False or is_valid_param(loaitailieu) == False or is_valid_param(link) == False:
+            if (not is_valid_param(tentailieu)) or (not is_valid_param(loaitailieu)) or (not is_valid_param(link)):
                 return  Response(
                     {
                         'code' : 1002,
@@ -92,6 +90,17 @@ class ManageMaterial(APIView):
         try:
             data = request.data
             idlophoc = data['idlophoc']
+
+            if not is_valid_param(idlophoc):
+                return  Response(
+                    {
+                        'code' : 9992,
+                        'message': 'Missing id class input' 
+                    }, 
+                    status= status.HTTP_400_BAD_REQUEST
+                )
+
+
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return Response(
                     {
@@ -157,7 +166,7 @@ class ManageMaterial(APIView):
             
             data=request.data
             idtailieu = data['idtailieu']
-            if is_valid_param(idtailieu) == False:
+            if not is_valid_param(idtailieu):
                 return Response(
                     {
                         'code' : 1004,
@@ -180,18 +189,18 @@ class ManageMaterial(APIView):
             loaitailieu = data['loaitailieu']
             link = data['link']
 
-            tailieu = TaiLieuHocTap.objects.get(idtailieu = idtailieu)
-
-            if is_valid_param(tentailieu) == False:
+            if not tentailieu:
                 return Response(
                     {
-                        'code' : 1006,
-                        'message': 'Missing title info. Please add missing input' 
+                        'code' : 1004,
+                        'message': 'Missing name info. Please add input' 
                     }, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Check xem các thuộc tính mới có giống cũ không ? chưa hoàn chỉnh
+            tailieu = TaiLieuHocTap.objects.get(idtailieu = idtailieu)
+
+            # Check xem các thuộc tính mới có giống cũ không
             tailieu_seria = TaiLieuHocTapSerializer(tailieu)
             old_tentailieu = tailieu_seria.data.get('tentailieu')
             old_description = tailieu_seria.data.get('description')
@@ -215,8 +224,10 @@ class ManageMaterial(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            tailieu.tentailieu = tentailieu
             tailieu.description = mota
+
+            if is_valid_param(tentailieu):
+                tailieu.tentailieu = tentailieu
             
             if is_valid_param(loaitailieu) == True:
                 tailieu.loaitailieu = loaitailieu
@@ -258,7 +269,7 @@ class ManageMaterial(APIView):
             
             data=request.data
             idtailieu = data['idtailieu']
-            if is_valid_param(idtailieu) == False:
+            if not is_valid_param(idtailieu):
                 return Response(
                     {
                         'code' : 1004,
@@ -303,7 +314,7 @@ class GetMaterialInfo(APIView):
         try:
             data=request.data
             idtailieu = data['idtailieu']
-            if is_valid_param(idtailieu) == False:
+            if not is_valid_param(idtailieu):
                 return Response(
                     {
                         'code' : 1004,
