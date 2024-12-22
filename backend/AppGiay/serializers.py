@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import SinhVien, GiangVien, LopHoc, ThanhVienLop, DonXinNghi, BuoiHoc, DiemDanh, TaiLieuHocTap, BaiTap, BaiLam
+from .models import SinhVien, GiangVien, LopHoc, ThanhVienLop, DonXinNghi, BuoiHoc, DiemDanh, TaiLieuHocTap, BaiTap, BaiLam 
+from .models import ThongbBaoTinNhan
 User = get_user_model()
 
 
@@ -58,3 +59,8 @@ class BaiLamSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaiLam
         fields = ('idbailam', 'idbaitap', 'idsinhvien', 'filebailam', 'description', 'ngaynop', 'diem',)
+
+class ThongbBaoTinNhanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ThongbBaoTinNhan
+        fields = ('message_id', 'sender_id', 'receiver_id', 'message', 'type', 'related_id', 'is_read')

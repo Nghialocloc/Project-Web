@@ -290,7 +290,7 @@ class BaiTap(models.Model):
     idlophoc = models.ForeignKey('LopHoc', on_delete=models.CASCADE, db_column='IDLopHoc')  # Liên kết lớp học
     tenbaitap = models.CharField(max_length=50) # Tên bài tập
     mota = models.CharField(db_column='MoTa', max_length=200)  # Mô tả chi tiết bài tập
-    filebaitap = models.FileField(db_column='FileBaiTap', upload_to='baitap_files/', null=True, blank=True)  # File đính kèm bài tập
+    filebaitap = models.FileField(db_column='FileBaiTap', upload_to='baitap_files/')  # File đính kèm bài tập
     deadline = models.DateTimeField(db_column='HanHop') # Hạn nộp bài tập
     create_day = models.DateTimeField(db_column='NgayTao') # Ngày tạo bài tập
 
@@ -303,7 +303,7 @@ class BaiLam(models.Model):
     idbailam = models.IntegerField(db_column='IDBaiLam', primary_key=True)  # ID nộp bài
     idbaitap = models.ForeignKey('BaiTap', on_delete=models.CASCADE, db_column='IDBaiTap') # Liên kết tới bài tập
     idsinhvien = models.ForeignKey('SinhVien', on_delete=models.CASCADE, db_column='IDSinhVien')  # Liên kết sinh viên
-    filebailam = models.FileField(db_column='FileBaiLam', upload_to='nopbai_files/') # File bài giải sinh viên nộp
+    filebailam = models.FileField(db_column='FileBaiLam', upload_to='bailam_files/') # File bài giải sinh viên nộp
     description = models.CharField(db_column='MoTa', max_length = 200,null=True, blank=True) # Mô tả bài làm (nếu không có file)
     ngaynop = models.DateTimeField(db_column='NgayNop') # Ngày nộp bài
     diem = models.FloatField(db_column='DiemSo', null=True, blank=True) # Điểm số bài tập (giáo viên chấm)
@@ -311,3 +311,17 @@ class BaiLam(models.Model):
     class Meta:
         managed = True
         db_table = 'bailam'
+
+
+class ThongbBaoTinNhan(models.Model):
+    message_id = models.CharField(primary_key=True, max_length=8, db_column='IDMessage')
+    sender_id = models.ForeignKey('UserAccount', on_delete = models.PROTECT, db_column='IDSender') # Field name made lowercase.
+    receiver_id = models.IntegerField(db_column='IDReceiver')
+    message = models.CharField(db_column='NoiDung', max_length=200)
+    type = models.SmallIntegerField(db_column='LoaiTinNhan', db_comment='Don nghi hoc = 0, Diểm bài kiểm tra = 1, Ket qua xet đơn nghỉ = 2, Bai tap moi = 3')  # Field name made lowercase.
+    related_id = models.IntegerField(db_column='IDLienHe', blank=True, null=True)
+    is_read = models.BooleanField(db_column='DaDoc')
+
+    class Meta:
+        managed = True
+        db_table = 'thongbao'

@@ -17,6 +17,10 @@ def is_valid_param(param) :
 def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+def generate_random_string(length=8):
+    chars = string.ascii_letters + string.digits
+    rand_chars = ''.join(random.choices(chars,k=length))
+    return rand_chars
 
 class ManageMaterial(APIView):
 

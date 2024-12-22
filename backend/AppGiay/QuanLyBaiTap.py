@@ -1,8 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import SinhVien, GiangVien
-from .models import LopHoc, ThanhVienLop
+from .models import SinhVien, GiangVien, LopHoc, ThanhVienLop
 from .models import BaiTap, BaiLam
 from .serializers import UserAccountSerializer, SinhVienSerializer
 from .serializers import LopHocSerializer, ThanhVienLopSerializer
@@ -11,6 +10,8 @@ from django.contrib.auth import get_user_model
 import traceback
 import random, string
 import datetime
+from django.core.files.storage import FileSystemStorage
+import os
 
 User = get_user_model()
 
@@ -20,7 +21,6 @@ def is_valid_param(param) :
 
 def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
-
 
 class ManageAssignment(APIView):
 
@@ -53,10 +53,10 @@ class ManageAssignment(APIView):
                     },
                     status=status.HTTP_404_NOT_FOUND
                 )
-
+            
             # Tạo ID bài tập duy nhất
             while True:
-                idbaitap = id_generator()
+                idbaitap = id_generator(size=6)
                 if not BaiTap.objects.filter(idbaitap=idbaitap).exists():
                     break
 
@@ -64,7 +64,6 @@ class ManageAssignment(APIView):
             tenbaitap = data.get('tenbaitap')
             mota = data.get('mota')
             deadline = data.get('deadline')
-            filebaitap = data.get('filebaitap')
 
             # Kiểm tra tên bài tập hợp lệ
             if not is_valid_param(tenbaitap) or len(tenbaitap) > 50:
@@ -88,25 +87,46 @@ class ManageAssignment(APIView):
 
             deadline_date = datetime.datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S")
             if deadline_date < datetime.datetime.now():
-                    return Response(
-                        {
-                            'code': 1004,
-                            'message': 'Deadline must not be in the past.'
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                    )                
+                return Response(
+                    {
+                        'code': 1004,
+                        'message': 'Deadline must not be in the past.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                ) 
+                        
+            if 'filebaitap' in request.FILES :
+                request_file = request.FILES['filebaitap']  
+            else: 
+                return Response(
+                    {
+                        'code': 1004,
+                        'message': 'No assignment file found. Please add assignment file'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                ) 
+            
+            # if request_file:
+            #     # create a new instance of FileSystemStorage
+            #     fs = FileSystemStorage()
+            #     file = fs.save(request_file.name, request_file)
+            #     # the fileurl variable now contains the url to the file. This can be used to serve the file when needed.
+            #     file_url = fs.url(file)
+                
 
             # Tạo và lưu bài tập mới vào database
-            baitap = BaiTap(idbaitap = idbaitap, idlop_id=idlophoc, tenbaitap = tenbaitap, mota = mota, filebaitap = filebaitap, 
-                            deadline = deadline_date, create_day = datetime.datetime.now())
+            baitap = BaiTap(idbaitap = idbaitap, idlophoc = LopHoc.objects.get(idlophoc = idlophoc), tenbaitap = tenbaitap, mota = mota, 
+                            filebaitap = request_file, deadline = deadline_date, create_day = datetime.datetime.now())
+            baitap.save()
 
             # Serialize dữ liệu và phản hồi kết quả
             serializer = BaiTapSerializer(baitap)
+
             return Response(
                 {
                     'code': 1000,
                     'message': 'Assignment created successfully.',
-                    'data': serializer.data
+                    'data': serializer.data,
                 },
                 status=status.HTTP_201_CREATED
             )
@@ -271,7 +291,7 @@ class ManageAssignment(APIView):
                 )
 
             # Kiểm tra xem bài tập có sinh viên nộp bài hay không
-            if BaiLam.objects.filter(idbaitap=idbaitap).exists():
+            if BaiLam.objects.filter(idbaitap=idbaitap).count() != 0:
                 return Response(
                     {
                         'code': 1014,
@@ -283,6 +303,7 @@ class ManageAssignment(APIView):
             # Xóa bài tập
             baitap = BaiTap.objects.get(idbaitap=idbaitap)
             baitap.delete()
+            
 
             return Response(
                 {
@@ -372,7 +393,11 @@ class ManageHomework(APIView):
         except Exception as e:
             traceback.print_exc()
             return Response(
-                {"code": 5000, "message": "An error occurred.", "error": str(e)},
+                {
+                    "code": 5000, 
+                    "message": "An error occurred.", 
+                    "error": str(e)
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -699,6 +724,7 @@ class SubmitHomework(APIView):
                 status= status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class GetAssignmemntList(APIView):
 
     permission_classes = (permissions.AllowAny, )
@@ -710,7 +736,7 @@ class GetAssignmemntList(APIView):
             data = request.data
             idlophoc = data.get('idlophoc')
 
-            # Kiểm tra idbaitap có được cung cấp không
+            # Kiểm tra idlophoc có được cung cấp không
             if not is_valid_param(idlophoc):
                 return Response(
                     {
@@ -720,7 +746,7 @@ class GetAssignmemntList(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Kiểm tra xem bài tập có tồn tại không
+            # Kiểm tra xem lop hoc có tồn tại không
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return Response(
                     {
@@ -731,14 +757,26 @@ class GetAssignmemntList(APIView):
                 )
 
             # Lấy thông tin chi tiết bài tập
-            baitap = BaiTap.objects.get(idlophoc = idlophoc)
+            if BaiTap.objects.filter(idlophoc = idlophoc).count() == 0:
+                return Response(
+                    {
+                        'code': 1006,
+                        'message': 'Class doesnt have a assignment.'
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            baitap = BaiTap.objects.filter(idlophoc = idlophoc)
             baitap_seria = BaiTapSerializer(baitap, many = True)
             for group in baitap_seria.data :
-                tenbaitap = baitap_seria.data.get('tenbaitap')
-                mota = baitap_seria.data.get('mota')
-                filebaitap = baitap_seria.data.get('filebaitap')
-                deadline = baitap_seria.data.get('deadline')
-                create_day = baitap_seria.data.get('create_day')
+                idbaitap = group.get('idbaitap')
+                this_baitap = BaiTap.objects.get(idbaitap = idbaitap)
+                filebaitap = this_baitap.filebaitap.path
+                
+                tenbaitap = group.get('tenbaitap')
+                mota = group.get('mota')
+                deadline = group.get('deadline')
+                create_day = group.get('create_day')
 
                 list_assignment = {
                     " Tieu de " : tenbaitap,
@@ -750,7 +788,7 @@ class GetAssignmemntList(APIView):
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             lophoc_seria = LopHocSerializer(lophoc)
-            tenlophoc = lophoc_seria.data.get('tenlophocy')
+            tenlophoc = lophoc_seria.data.get('tenlophoc')
 
             # Trả về kết quả
             return Response(
@@ -772,8 +810,9 @@ class GetAssignmemntList(APIView):
             traceback.print_exc()
             return Response(
                 {
-                    'error': 'Some exception happened.',
-                    'message': str(e)
+                    "code": 5000, 
+                    "message": "An error occurred.", 
+                    "error": str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -847,8 +886,4 @@ class GetAssignmemntInfo(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-
-
-
 
