@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 import traceback
 import random, string
 import datetime
+import re
 
 User = get_user_model()
 
@@ -17,10 +18,10 @@ def is_valid_param(param) :
 def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
-def generate_random_string(length=8):
-    chars = string.ascii_letters + string.digits
-    rand_chars = ''.join(random.choices(chars,k=length))
-    return rand_chars
+def is_google_drive_link(url):
+    return bool(re.match(r'https://drive.google.com/drive/', url))
+
+
 
 class ManageMaterial(APIView):
 
@@ -62,6 +63,15 @@ class ManageMaterial(APIView):
                         'message': 'The material info is not complete. Please check and add all missing input' 
                     }, 
                     status= status.HTTP_404_NOT_FOUND
+                )
+
+            if not is_google_drive_link(link):
+                return Response(
+                    {
+                        "code" : 1004,
+                        "message": "URL must be a Google Drive link."
+                    }, 
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
             while True:
@@ -203,6 +213,15 @@ class ManageMaterial(APIView):
                 )
 
             tailieu = TaiLieuHocTap.objects.get(idtailieu = idtailieu)
+
+            if is_valid_param(link) and (not is_google_drive_link(link)):
+                return Response(
+                    {
+                        "code" : 1004,
+                        "message": "URL must be a Google Drive link."
+                    }, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Check xem các thuộc tính mới có giống cũ không
             tailieu_seria = TaiLieuHocTapSerializer(tailieu)
