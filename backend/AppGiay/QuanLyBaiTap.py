@@ -458,15 +458,16 @@ class ManageHomework(APIView):
             # Lấy danh sách bài nộp cho bài tập
             submissions = BaiLam.objects.filter(idbaitap=idbaitap)
             submissions_seria = BaiLamSerializer(submissions, many=True)
-            idsinhvien = submissions_seria.data.get('idsinhvien')
-            ngaynop = submissions_seria.data.get('ngaynop')
-            diem = submissions_seria.data.get('diem')
+            for group in submissions_seria.data:
+                idsinhvien = group.get('idsinhvien')
+                ngaynop = group.get('ngaynop')
+                diem = group.get('diem')
 
-            list_homework = {
-                " Id sinh vien" : idsinhvien,
-                " Thoi gian nop" : ngaynop,
-                " Diem da cham" : diem
-            }
+                list_homework = {
+                    " Id sinh vien" : idsinhvien,
+                    " Thoi gian nop" : ngaynop,
+                    " Diem da cham" : diem
+                }
 
             return Response(
                 {
@@ -635,7 +636,7 @@ class SubmitHomework(APIView):
                     idbailam = id_generator(size= 8)
                     if (BaiLam.objects.filter(idbailam = idbailam).count() == 0):
                         break
-                bailam = BaiLam(idbailam=idbailam, idbaitap=baitap, idsinhvien = sinhvien, filebaigiai = filebailam, 
+                bailam = BaiLam(idbailam=idbailam, idbaitap=baitap, idsinhvien = sinhvien, filebailam = filebailam, 
                                 description=description, ngaynop = ngaynop)
                 bailam.save()
                 return Response(
@@ -707,7 +708,22 @@ class SubmitHomework(APIView):
                 )
 
             #Lấy thông tin bài tập để kiểm tra deadline
-            baitap = BaiTap.objects.get(idbailam = idbailam)
+            bailam = BaiLam.objects.get(idbailam = idbailam)
+            bailam_seria = BaiLamSerializer(bailam)
+            idbaitap = bailam_seria.data.get('idbaitap')
+            idsinhvien = bailam_seria.data.get('idsinhvien')
+            
+            sinhvien = SinhVien.objects.get(id = user.id)
+            if idsinhvien != sinhvien.idsinhvien:
+                return Response(
+                    {
+                        "code": 1004, 
+                        "message": "Student dont have pemissiom to change the request homework as they are not the one submited it."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            baitap = BaiTap.objects.get(idbaitap = idbaitap)
             baitap_seria = BaiTapSerializer(baitap)
             deadline = baitap_seria.data.get('deadline')
             ngaynop = str(datetime.datetime.now())
@@ -735,49 +751,45 @@ class SubmitHomework(APIView):
                 )
             
             bailam = BaiLam.objects.get(idbailam = idbailam)
-            bailam.description = description
+            if is_valid_param(description):
+                bailam.description = description
 
-            file_name = bailam.filebailam.name
-            # Build the file path using the default storage
-            original_file_path = f'{file_name}'
+            if is_valid_param(filebaigiai):
+                file_name = bailam.filebailam.name
+                # Build the file path using the default storage
+                original_file_path = f'{file_name}'
 
-            # Check if the file exists using Django's default storage
-            if not default_storage.exists(original_file_path):
-                return Response(
-                    {
-                        "error": "File not found",
-                        "Current dir" : file_name
-                    }, 
-                    status=status.HTTP_404_NOT_FOUND
-            )
+                # Check if the file exists using Django's default storage
+                if default_storage.exists(original_file_path):
 
-            # Create the trashbin directory if it doesn't exist
-            trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
-            if not os.path.exists(trashbin_dir):
-                os.makedirs(trashbin_dir)
+                    # Create the trashbin directory if it doesn't exist
+                    trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
+                    if not os.path.exists(trashbin_dir):
+                        os.makedirs(trashbin_dir)
 
-            # Create a subfolder named with the current date and time
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            trash_folder = os.path.join(trashbin_dir, timestamp)
-            if not os.path.exists(trash_folder):
-                os.makedirs(trash_folder)
+                    # Create a subfolder named with the current date and time
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    trash_folder = os.path.join(trashbin_dir, timestamp)
+                    if not os.path.exists(trash_folder):
+                        os.makedirs(trash_folder)
 
-            # New file path in the trashbin folder
-            new_file_path = os.path.join(trash_folder, file_name)
+                    # New file path in the trashbin folder
+                    new_file_path = os.path.join(trash_folder, file_name)
 
-            # Move the file to the trashbin
-            try:
-                # Move the file to the new trash folder
-                default_storage.save(new_file_path, default_storage.open(original_file_path))
-                # Optionally delete the original file after moving
-                default_storage.delete(original_file_path)
+                    # Move the file to the trashbin
+                    try:
+                        # Move the file to the new trash folder
+                        default_storage.save(new_file_path, default_storage.open(original_file_path))
+                        # Optionally delete the original file after moving
+                        default_storage.delete(original_file_path)
             
-            except Exception as e:
-                return Response(
-                    {"error": str(e)}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    except Exception as e:
+                        return Response(
+                            {"error": str(e)}, 
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            bailam.filebailam = filebaigiai
+                bailam.filebailam = filebaigiai
+
             bailam.save()
             return Response(
                 {
@@ -821,7 +833,11 @@ class SubmitHomework(APIView):
                 )
 
             #Lấy thông tin bài tập để kiểm tra deadline
-            baitap = BaiTap.objects.get(idbailam = idbailam)
+            bailam = BaiLam.objects.get(idbailam = idbailam)
+            bailam_seria = BaiLamSerializer(bailam)
+            idbaitap = bailam_seria.data.get('idbaitap')
+
+            baitap = BaiTap.objects.get(idbaitap = idbaitap)
             baitap_seria = BaiTapSerializer(baitap)
             deadline = baitap_seria.data.get('deadline')
             ngaynop = str(datetime.datetime.now())
@@ -835,47 +851,41 @@ class SubmitHomework(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            bailam = BaiLam.objects.get(idbailam = idbailam)
+            
             file_name = bailam.filebailam.name
 
             # Build the file path using the default storage
             original_file_path = f'{file_name}'
 
             # Check if the file exists using Django's default storage
-            if not default_storage.exists(original_file_path):
-                return Response(
-                    {
-                        "error": "File not found",
-                        "Current dir" : file_name
-                    }, 
-                    status=status.HTTP_404_NOT_FOUND
-            )
+            if default_storage.exists(original_file_path):
+                
+                # Create the trashbin directory if it doesn't exist
+                trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
+                if not os.path.exists(trashbin_dir):
+                    os.makedirs(trashbin_dir)
 
-            # Create the trashbin directory if it doesn't exist
-            trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
-            if not os.path.exists(trashbin_dir):
-                os.makedirs(trashbin_dir)
+                # Create a subfolder named with the current date and time
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                trash_folder = os.path.join(trashbin_dir, timestamp)
+                if not os.path.exists(trash_folder):
+                    os.makedirs(trash_folder)
 
-            # Create a subfolder named with the current date and time
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            trash_folder = os.path.join(trashbin_dir, timestamp)
-            if not os.path.exists(trash_folder):
-                os.makedirs(trash_folder)
+                # New file path in the trashbin folder
+                new_file_path = os.path.join(trash_folder, file_name)
 
-            # New file path in the trashbin folder
-            new_file_path = os.path.join(trash_folder, file_name)
-
-            # Move the file to the trashbin
-            try:
-                # Move the file to the new trash folder
-                default_storage.save(new_file_path, default_storage.open(original_file_path))
-                # Optionally delete the original file after moving
-                default_storage.delete(original_file_path)
+                # Move the file to the trashbin
+                try:
+                    # Move the file to the new trash folder
+                    default_storage.save(new_file_path, default_storage.open(original_file_path))
+                    # Optionally delete the original file after moving
+                    default_storage.delete(original_file_path)
             
-            except Exception as e:
-                return Response(
-                    {"error": str(e)}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                except Exception as e:
+                    return Response(
+                        {"error": str(e)}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
 
             bailam.delete()
 

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Các màu đỏ trồng lên nhau</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        /* Căn chỉnh các hình chữ nhật về phía dưới */
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        /* Màu nền trang */
+    }
+
+
+    .color-box {
+        width: 100px;
+        /* Độ rộng của hình chữ nhật */
+        position: relative;
+        /* Để các hình chữ nhật trồng lên nhau */
+        margin: 0 5px;
+        /* Khoảng cách giữa các hình chữ nhật */
+    }
+
+    .light-red {
+        height: 50px;
+        /* Chiều cao hình chữ nhật màu đỏ nhạt */
+        background-color: #ffcccc;
+        /* Màu đỏ nhạt */
+    }
+
+    .red {
+        height: 70px;
+        /* Chiều cao hình chữ nhật màu đỏ */
+        background-color: #ff9999;
+        /* Màu đỏ */
+        position: absolute;
+        /* Trồng lên hình dưới */
+        bottom: 50px;
+        /* Đặt ở vị trí trên hình chữ nhật màu nhạt */
+    }
+
+    .dark-red {
+        height: 90px;
+        /* Chiều cao hình chữ nhật màu đỏ đậm */
+        background-color: #ff6666;
+        /* Màu đỏ đậm */
+        position: absolute;
+        /* Trồng lên hình dưới */
+        bottom: 120px;
+        /* Đặt ở vị trí trên hình chữ nhật màu đỏ */
+    }
+
+    .deeper-red {
+        height: 110px;
+        /* Chiều cao hình chữ nhật màu đỏ sâu */
+        background-color: #ff3333;
+        /* Màu đỏ sâu */
+        position: absolute;
+        /* Trồng lên hình dưới */
+        bottom: 210px;
+        /* Đặt ở vị trí trên hình chữ nhật màu đỏ đậm */
+    }
+
+    .deepest-red {
+        height: 130px;
+        /* Chiều cao hình chữ nhật màu đỏ tối nhất */
+        background-color: #ff0000;
+        /* Màu đỏ tối nhất */
+        position: absolute;
+        /* Trồng lên hình dưới */
+        bottom: 320px;
+        /* Đặt ở vị trí trên hình chữ nhật màu đỏ sâu */
+    }
+</style>
+
+<body>
+    <div class="color-box light-red">#ffcccc</div>
+    <div class="color-box red">#ff9999</div>
+    <div class="color-box dark-red">#ff6666</div>
+    <div class="color-box deeper-red">#ff3333</div>
+    <div class="color-box deepest-red">#ff0000</div>
+</body>
+
+</html>
