@@ -836,6 +836,17 @@ class SubmitHomework(APIView):
             bailam = BaiLam.objects.get(idbailam = idbailam)
             bailam_seria = BaiLamSerializer(bailam)
             idbaitap = bailam_seria.data.get('idbaitap')
+            idsinhvien = bailam_seria.data.get('idsinhvien')
+            
+            sinhvien = SinhVien.objects.get(id = user.id)
+            if idsinhvien != sinhvien.idsinhvien:
+                return Response(
+                    {
+                        "code": 1004, 
+                        "message": "Student dont have pemissiom to change the request homework as they are not the one submited it."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
             baitap = BaiTap.objects.get(idbaitap = idbaitap)
             baitap_seria = BaiTapSerializer(baitap)
