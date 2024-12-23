@@ -281,7 +281,7 @@ class ManageAttendanceClass(APIView):
                         "Id lop hoc" : idlophoc,
                         "Ten lop hoc" : tenlophoc
                     },
-                    'Ngau diem danh' : ngaydienra,
+                    'Ngay diem danh' : ngaydienra,
                     'Danh sach diem danh': list_attendance
                 }, 
                 status= status.HTTP_200_OK

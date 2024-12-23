@@ -210,11 +210,11 @@ class ManageAbsenceForm(APIView):
             
             data = request.data
             idlophoc = data['idlophoc']
-            if idlophoc or (not is_valid_param(idlophoc)):
+            if not is_valid_param(idlophoc):
                 return Response(
                     {
                         'code' : 1004,
-                        'message': 'Invaild id. Please check input again.' 
+                        'message': 'Invaild id cua lop hoc. Please check input again.' 
                     }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )
@@ -223,7 +223,7 @@ class ManageAbsenceForm(APIView):
                 return Response(
                     {
                         'code' : 1009,
-                        'message': 'Class not found. Please try again.' 
+                        'message': 'Class not found. Please try different input.' 
                     }
                     ,status= status.HTTP_400_BAD_REQUEST
                 )

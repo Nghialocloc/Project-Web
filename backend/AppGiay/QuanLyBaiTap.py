@@ -25,8 +25,6 @@ def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-
-
 class ManageAssignment(APIView):
 
     permission_classes = (permissions.AllowAny, )
