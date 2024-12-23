@@ -318,7 +318,7 @@ class ThongbBaoTinNhan(models.Model):
     sender_id = models.ForeignKey('UserAccount', on_delete = models.PROTECT, db_column='IDSender') # Field name made lowercase.
     receiver_id = models.IntegerField(db_column='IDReceiver')
     message = models.CharField(db_column='NoiDung', max_length=200)
-    type = models.SmallIntegerField(db_column='LoaiTinNhan', db_comment='Don nghi hoc = 0, Diểm bài kiểm tra = 1, Ket qua xet đơn nghỉ = 2, Bai tap moi = 3')  # Field name made lowercase.
+    type = models.SmallIntegerField(db_column='LoaiTinNhan', db_comment='Don nghi hoc = 0, Diểm bài kiểm tra = 1, Ket qua xet đơn nghỉ = 2, Bai tap moi = 3, Thong bao = 4')  # Field name made lowercase.
     related_id = models.IntegerField(db_column='IDLienHe', blank=True, null=True)
     is_read = models.BooleanField(db_column='DaDoc')
 

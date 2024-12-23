@@ -4,6 +4,10 @@ from .models import UserAccount
 from .serializers import UserAccountSerializer
 from .models import ThongbBaoTinNhan
 from .serializers import ThongbBaoTinNhanSerializer
+from .models import DonXinNghi
+from .serializers import DonXinNghiSerializer
+from .models import BaiTap, BaiLam
+from .serializers import BaiTapSerializer, BaiLamSerializer
 import traceback
 import requests
 from django.contrib.auth import get_user_model
@@ -61,6 +65,15 @@ class MessageSender(APIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
 
+            if int(sender_id) == int(receiver_id):
+                return Response(
+                        {
+                            'code' : 9999,
+                            'message' : "User can not send message to themselves", 
+                        }, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
             message = data['message']
             if not is_valid_param(message):
                 return Response(
@@ -81,7 +94,7 @@ class MessageSender(APIView):
                     )
 
             type = data['type']
-            if not is_valid_param(message):
+            if not is_valid_param(type):
                 return Response(
                         {
                             'code' : 1002,
@@ -93,16 +106,48 @@ class MessageSender(APIView):
             related_id = data['related_id']
             is_read = False
 
+            if int(type) == 0 or int(type) == 2:
+                if DonXinNghi.objects.filter(iddon = related_id).count() == 0:
+                    return Response(
+                        {
+                            'code' : 1004,
+                            'message' : "Mismatch info for this type of message. This type of notification require id of absence form", 
+                        }, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            if int(type) == 1 or int(type) == 3:
+                if BaiTap.objects.filter(idbaitap = related_id).count() == 0:
+                    return Response(
+                        {
+                            'code' : 1004,
+                            'message' : "Mismatch info for this type of message. This type of notification require id of assignment", 
+                        }, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            if int(type) != 4 and (not is_valid_param(related_id)):
+                return Response(
+                        {
+                            'code' : 1004,
+                            'message' : "Mismatch info for this type of message. Please add the related id or correct the type", 
+                        }, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
             while True:
                 message_id = generate_random_string(length=8)
                 if (ThongbBaoTinNhan.objects.filter(message_id = message_id).count() == 0):
                     break
 
-           
-            msgstr = ThongbBaoTinNhan(message_id = message_id, sender_id = sender_id, receiver_id = receiver_id, message = message,
-                                      type = type, related_id = related_id, is_read = is_read)
+            if int(type) == 4:
+                msgstr = ThongbBaoTinNhan(message_id = message_id, sender_id = UserAccount.objects.get( id = sender_id), receiver_id = receiver_id, 
+                                      message = message, type = type, is_read = is_read)
+            else:
+                msgstr = ThongbBaoTinNhan(message_id = message_id, sender_id = UserAccount.objects.get( id = sender_id), receiver_id = receiver_id, 
+                                      message = message, type = type, related_id = related_id, is_read = is_read)
             msgstr.save()
-
+            
             return Response(
                 {
                     'code':1000, 
@@ -136,32 +181,58 @@ class MessageSender(APIView):
                     )
 
             index = int(data['index'])
-            if ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id) < index or (not is_valid_param(index)):
+            if ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id).count() < index or (not is_valid_param(index)):
                 return Response(
                         {
                             'code' : 1002,
-                            'message' : "Invalid index input. Please check input again", 
+                            'message' : "Invalid index input. The number of notification is less than index" 
                         }, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
             count = int(data['count'])
-            if ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id) < (index + count):
+            if ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id).count() < (index + count):
                 return Response(
                         {
                             'code' : 1004,
-                            'message' : "The number of request message is too big. Please change the number", 
+                            'message' : "The number of request message is too big. Please change the count", 
                         }, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
             
-            received_notifs = ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id)[index:index + count]
-            received_notifs = ThongbBaoTinNhanSerializer(received_notifs, many = True)    
+
+
+            received_notifs = ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id)
+            received_notifs_seria = ThongbBaoTinNhanSerializer(received_notifs, many = True)
+
+            notif = 0
+            request_notif = []
+
+            for group in received_notifs_seria.data:
+                if notif >= index and (notif <= index + count):
+                    sender_id = group.get('sender_id')
+                    received_id = group.get('received_id')
+                    message = group.get('message')
+                    type = group.get('type')
+                    related_id = group.get('related_id')
+                    is_read = group.get('is_read')
+                    request_notif.append(
+                        {
+                            "Id nguoi gui": sender_id,
+                            "Id nguoi nhan" : received_id,
+                            "Noi dung" : message,
+                            "Loai " : type,
+                            "Cac van ban lien quan" : related_id,
+                            "Da doc" : is_read
+                        }
+                    )
+                notif = notif + 1
+
             return Response(
                 {
                     'code':1000,
                     'message':'OK',
-                    'Danh sach thong bao duoc gui toi': received_notifs.data
+                    'Danh sach thong bao duoc gui toi': request_notif
                 }
             ) 
         except Exception as e:
@@ -190,17 +261,28 @@ class MessageSender(APIView):
                     )
             
             notification_list = data['notification_list']
-            received_notifs = ThongbBaoTinNhan.objects.filter(receiver_id = receiver_id)
-            received_notifs_seria = ThongbBaoTinNhanSerializer(received_notifs, many = True)
-            for group in received_notifs_seria:
-                message_id = group.get('message_id')
-                if message_id in notification_list:
-                    message = ThongbBaoTinNhan.objects.get(message_id = message_id)
-                    if message.is_read == False:
-                        message.is_read = True
+            if notification_list == []:
+                return Response(
+                        {
+                            'code' : 1002,
+                            'message' : "No message had been select in this list", 
+                        }, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
-                    read = ThongbBaoTinNhanSerializer(message)
-                    read_list.append(read)
+            for group in notification_list:
+                if ThongbBaoTinNhan.objects.filter(message_id = group).count() != 0:
+                    message = ThongbBaoTinNhan.objects.get(message_id = group)
+                    message.is_read = True
+                    message.save()
+
+                    read_list.append(
+                        {
+                            "Noi dung tin nhan" : message.message,
+                            "Loai" : message.type,
+                            "Da doc" : message.is_read
+                        }
+                    )
 
             return Response(
                 {

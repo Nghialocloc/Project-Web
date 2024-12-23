@@ -12,6 +12,8 @@ import random, string
 import datetime
 from django.core.files.storage import FileSystemStorage
 import os
+from django.core.files.storage import default_storage
+from django.conf import settings
 
 User = get_user_model()
 
@@ -21,6 +23,9 @@ def is_valid_param(param) :
 
 def id_generator (size, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
+
+
 
 class ManageAssignment(APIView):
 
@@ -230,7 +235,49 @@ class ManageAssignment(APIView):
             if is_valid_param(deadline):
                 baitap.deadline = deadline
             if is_valid_param(filebaitap):
+                file_name = baitap.filebaitap.name
+
+                # Build the file path using the default storage
+                original_file_path = f'{file_name}'
+
+                # Check if the file exists using Django's default storage
+                if not default_storage.exists(original_file_path):
+                    return Response(
+                        {
+                            "error": "File not found",
+                            "Current dir" : file_name
+                        }, 
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+
+                # Create the trashbin directory if it doesn't exist
+                trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
+                if not os.path.exists(trashbin_dir):
+                    os.makedirs(trashbin_dir)
+
+                # Create a subfolder named with the current date and time
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                trash_folder = os.path.join(trashbin_dir, timestamp)
+                if not os.path.exists(trash_folder):
+                    os.makedirs(trash_folder)
+
+                # New file path in the trashbin folder
+                new_file_path = os.path.join(trash_folder, file_name)
+
+                # Move the file to the trashbin
+                try:
+                    # Move the file to the new trash folder
+                    default_storage.save(new_file_path, default_storage.open(original_file_path))
+                    # Optionally delete the original file after moving
+                    default_storage.delete(original_file_path)
+            
+                except Exception as e:
+                    return Response(
+                        {"error": str(e)}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
                 baitap.filebaitap = filebaitap
+
             baitap.save()
 
             # Serialize lại dữ liệu đã cập nhật
@@ -302,8 +349,48 @@ class ManageAssignment(APIView):
 
             # Xóa bài tập
             baitap = BaiTap.objects.get(idbaitap=idbaitap)
-            baitap.delete()
+            file_name = baitap.filebaitap.name
             
+            # Build the file path using the default storage
+            original_file_path = f'{file_name}'
+
+            # Check if the file exists using Django's default storage
+            if not default_storage.exists(original_file_path):
+                return Response(
+                    {
+                        "error": "File not found",
+                        "Current dir" : file_name
+                    }, 
+                    status=status.HTTP_404_NOT_FOUND
+            )
+
+            # Create the trashbin directory if it doesn't exist
+            trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
+            if not os.path.exists(trashbin_dir):
+                os.makedirs(trashbin_dir)
+
+            # Create a subfolder named with the current date and time
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            trash_folder = os.path.join(trashbin_dir, timestamp)
+            if not os.path.exists(trash_folder):
+                os.makedirs(trash_folder)
+
+            # New file path in the trashbin folder
+            new_file_path = os.path.join(trash_folder, file_name)
+
+            # Move the file to the trashbin
+            try:
+                # Move the file to the new trash folder
+                default_storage.save(new_file_path, default_storage.open(original_file_path))
+                # Optionally delete the original file after moving
+                default_storage.delete(original_file_path)
+            
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            baitap.delete()
 
             return Response(
                 {
@@ -649,6 +736,47 @@ class SubmitHomework(APIView):
             
             bailam = BaiLam.objects.get(idbailam = idbailam)
             bailam.description = description
+
+            file_name = bailam.filebailam.name
+            # Build the file path using the default storage
+            original_file_path = f'{file_name}'
+
+            # Check if the file exists using Django's default storage
+            if not default_storage.exists(original_file_path):
+                return Response(
+                    {
+                        "error": "File not found",
+                        "Current dir" : file_name
+                    }, 
+                    status=status.HTTP_404_NOT_FOUND
+            )
+
+            # Create the trashbin directory if it doesn't exist
+            trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
+            if not os.path.exists(trashbin_dir):
+                os.makedirs(trashbin_dir)
+
+            # Create a subfolder named with the current date and time
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            trash_folder = os.path.join(trashbin_dir, timestamp)
+            if not os.path.exists(trash_folder):
+                os.makedirs(trash_folder)
+
+            # New file path in the trashbin folder
+            new_file_path = os.path.join(trash_folder, file_name)
+
+            # Move the file to the trashbin
+            try:
+                # Move the file to the new trash folder
+                default_storage.save(new_file_path, default_storage.open(original_file_path))
+                # Optionally delete the original file after moving
+                default_storage.delete(original_file_path)
+            
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             bailam.filebailam = filebaigiai
             bailam.save()
             return Response(
@@ -708,7 +836,49 @@ class SubmitHomework(APIView):
                 )
             
             bailam = BaiLam.objects.get(idbailam = idbailam)
+            file_name = bailam.filebailam.name
+
+            # Build the file path using the default storage
+            original_file_path = f'{file_name}'
+
+            # Check if the file exists using Django's default storage
+            if not default_storage.exists(original_file_path):
+                return Response(
+                    {
+                        "error": "File not found",
+                        "Current dir" : file_name
+                    }, 
+                    status=status.HTTP_404_NOT_FOUND
+            )
+
+            # Create the trashbin directory if it doesn't exist
+            trashbin_dir = os.path.join(settings.MEDIA_ROOT, 'trashbin')
+            if not os.path.exists(trashbin_dir):
+                os.makedirs(trashbin_dir)
+
+            # Create a subfolder named with the current date and time
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            trash_folder = os.path.join(trashbin_dir, timestamp)
+            if not os.path.exists(trash_folder):
+                os.makedirs(trash_folder)
+
+            # New file path in the trashbin folder
+            new_file_path = os.path.join(trash_folder, file_name)
+
+            # Move the file to the trashbin
+            try:
+                # Move the file to the new trash folder
+                default_storage.save(new_file_path, default_storage.open(original_file_path))
+                # Optionally delete the original file after moving
+                default_storage.delete(original_file_path)
+            
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             bailam.delete()
+
             return Response(
                 {
                     "code": 1001,
@@ -771,7 +941,7 @@ class GetAssignmemntList(APIView):
             for group in baitap_seria.data :
                 idbaitap = group.get('idbaitap')
                 this_baitap = BaiTap.objects.get(idbaitap = idbaitap)
-                filebaitap = this_baitap.filebaitap.path
+                filebaitap = this_baitap.filebaitap.name
                 
                 tenbaitap = group.get('tenbaitap')
                 mota = group.get('mota')
