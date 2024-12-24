@@ -86,7 +86,7 @@ class ManageAccount(APIView):
             is_teacher = data['is_teacher']
             
             if password ==  re_password:
-                if len(password) < 6 or len(password) > 12:
+                if not len(password) < 6 or (not len(password) > 12):
                     if not UserAccount.objects.filter(email=email).exists():
                         if not is_teacher:
                             student = User.objects.create_student(email = email, accountname=accountname, sex = gioitinh, 

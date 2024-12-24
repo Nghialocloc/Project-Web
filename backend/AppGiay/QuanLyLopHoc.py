@@ -72,7 +72,7 @@ class ManageClass(APIView):
                     return  Response(
                         {
                             'code' : 1004,
-                            'message': 'Class name is invalid. Please input name again.'
+                            'message': 'Class name is invalid. Please make sure class name is correct and less than 50 character.'
                         }, 
                         status= status.HTTP_404_NOT_FOUND
                     )
@@ -208,6 +208,16 @@ class ManageClass(APIView):
             
             data=request.data
             idlophoc = data['idlophoc']
+
+            if not is_valid_param(idlophoc):
+                return JsonResponse(
+                    {
+                        'code' : 1004,
+                        'message': 'Missing id class in the field. Please add info.'
+                    }
+                    ,status= status.HTTP_400_BAD_REQUEST
+                )
+
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return JsonResponse(
                     {
@@ -344,7 +354,16 @@ class ManageClassStudent(APIView):
                         'code' : 1004,
                         'message': 'Lớp đã quá thời hạn đăng ký'
                     }, 
-                    status= status.HTTP_404_NOT_FOUND
+                    status= status.HTTP_400_BAD_REQUEST
+                )
+            
+            if ThanhVienLop.objects.filter(idsinhvien = sinhvien.idsinhvien).count != 0:
+                return  Response(
+                    {
+                        'code' : 1004,
+                        'message': 'Student has already sign in this class'
+                    }, 
+                    status= status.HTTP_400_BAD_REQUEST
                 )
 
             while True:
@@ -459,7 +478,17 @@ class ManageStudent(APIView):
                 )
             
             data=request.data
-            idthanhvien = data['idthanhvien']
+            idthanhvien = int(data['idthanhvien'])
+
+            if not is_valid_param(idthanhvien):
+                return Response(
+                    {
+                        'code' : 1004,
+                        'message': 'Member id is missing.' 
+                    }
+                    ,status= status.HTTP_404_NOT_FOUND
+                )
+
             if ThanhVienLop.objects.filter(idthanhvien = idthanhvien).count() == 0:
                 return Response(
                     {
@@ -553,7 +582,17 @@ class GetClassInfo(APIView):
             list_class_member = []
             data = request.data
 
-            idlophoc = data['idlophoc']
+            idlophoc = int(data['idlophoc'])
+
+            if not is_valid_param(idlophoc):
+                return  Response(
+                    {
+                        'code' : 1004,
+                        'message': 'Missing class id. Please check input again'
+                    }, 
+                    status= status.HTTP_404_NOT_FOUND
+                )
+
             if LopHoc.objects.filter(idlophoc = idlophoc).count() == 0:
                 return  Response(
                     {

@@ -69,6 +69,16 @@ class ManageAbsenceForm(APIView):
                 idthanhvien = get_member_id(idsinhvien, idlophoc)
                 ngayxinnghi = data['ngayxinnghi']
                 lydo = data['lydo']
+
+                if not is_valid_param(lydo):
+                    return  Response(
+                        {
+                            'code' : 1004,
+                            'message': 'Missing reason for absence. Please check id input' 
+                        }, 
+                        status= status.HTTP_404_NOT_FOUND
+                    )   
+
                 trangthai = 0
                 thoigiangui = timezone.now()
 
@@ -115,7 +125,7 @@ class ManageAbsenceForm(APIView):
             
             data=request.data
             iddon = data['iddon']
-            if iddon or (not is_valid_param(iddon)):
+            if (not is_valid_param(iddon)):
                 return Response(
                     {
                         'code' : 1004,
@@ -230,14 +240,14 @@ class ManageAbsenceForm(APIView):
             
             lophoc  = LopHoc.objects.get(idlophoc = idlophoc)
             tenlophoc = lophoc.tenlophoc
-            if lophoc.idgiangvien != idgiangvien:
-                return Response(
-                    {
-                        'code' : 1009,
-                        'message': 'This teacher doesnt manage this class and have necessary permission' 
-                    }
-                    ,status= status.HTTP_400_BAD_REQUEST
-                )
+            # if lophoc.idgiangvien != idgiangvien:
+            #     return Response(
+            #         {
+            #             'code' : 1009,
+            #             'message': 'This teacher doesnt manage this class and have necessary permission' 
+            #         }
+            #         ,status= status.HTTP_400_BAD_REQUEST
+            #     )
             
             thanhvienlop = ThanhVienLop.objects.filter(idlophoc = idlophoc)
             thanhvienlop_seria = ThanhVienLopSerializer(thanhvienlop, many = True)

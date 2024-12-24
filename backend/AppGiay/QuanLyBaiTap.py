@@ -213,10 +213,8 @@ class ManageAssignment(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Kiểm tra ngày deadline moi hợp lệ
-            if is_valid_param(deadline_date):
-                deadline_date = datetime.datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S")
-                if deadline_date < datetime.datetime.now():
+            if is_valid_param(deadline):
+                if deadline < str(datetime.datetime.now()):
                     return Response(
                         {
                             'code': 1004,
@@ -924,6 +922,8 @@ class GetAssignmemntList(APIView):
             # Lấy dữ liệu từ request
             data = request.data
             idlophoc = data.get('idlophoc')
+            
+            list_assignment = []
 
             # Kiểm tra idlophoc có được cung cấp không
             if not is_valid_param(idlophoc):
@@ -967,13 +967,13 @@ class GetAssignmemntList(APIView):
                 deadline = group.get('deadline')
                 create_day = group.get('create_day')
 
-                list_assignment = {
+                list_assignment.append( {
                     " Tieu de " : tenbaitap,
                     " Mo ta " : mota,
                     " File " : filebaitap,
                     " Han nop " : deadline,
                     " Ngay dang " : create_day
-                }
+                })
 
             lophoc = LopHoc.objects.get(idlophoc = idlophoc)
             lophoc_seria = LopHocSerializer(lophoc)

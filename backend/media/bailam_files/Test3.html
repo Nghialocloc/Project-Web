@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đếm Ngày Đến Các Ngày Lễ</title>
+    <style>
+        body {
+            background-color: rgb(212, 0, 0);
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .holiday-block {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            background-image: url("https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Vietnam.svg");
+            background-size: 100% 100%;
+            color: white;
+            border-radius: 8px;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        p {
+            text-align: center;
+        }
+
+        h1 {
+            color: #e4e4e4;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Thời gian sẽ còn:</h1>
+    <div class="holiday-block" id="holiday-table"></div>
+    <!-- <script src="script.js"></script> -->
+    <script>
+        var holiday1 = 19;
+        var holiday2 = 84;
+        var holiday3 = 92;
+        var holiday4 = 120;
+        var holiday5 = 188;
+        var holiday6 = 211;
+        var holiday7 = 212;
+        document.getElementById("holiday-table").innerHTML = `
+        <p>Còn ${holiday1} ngày đến Ngày phụ nữ Việt Nam (20/10/2024)</p>
+        <p>Còn ${holiday2} ngày đến Lễ Noel (24/12/2024)</p>
+        <p>Còn ${holiday3} ngày đến Tết Dương lịch (01/01/2025)</p>
+        <p>Còn ${holiday4} ngày đến Tết Âm lịch (29/01/2025)</p>
+        <p>Còn ${holiday5} ngày đến Giỗ tổ Hùng Vương (07/04/2025)</p>
+        <p>Còn ${holiday6} ngày đến Giải phóng miền Nam (30/04/2025)</p>
+        <p>Còn ${holiday7} ngày đến Quốc tế Lao động (01/05/2025)</p>
+      `;
+    </script>
+</body>
+
+</html>
